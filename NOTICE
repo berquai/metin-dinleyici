@@ -1,0 +1,66 @@
+Metin Dinleyici
+Copyright (C) 2026 Berkay Çelik <berkcel@gmail.com>
+
+Bu program özgür yazılımdır. GNU Affero Genel Kamu Lisansı'nın 3. sürümü ya da
+(tercihinize göre) daha sonraki bir sürümü (AGPL-3.0-or-later) ve aşağıdaki ek koşullar
+çerçevesinde kullanabilir, inceleyebilir, değiştirebilir ve yeniden dağıtabilirsiniz.
+Lisansın tam metni LICENSE dosyasındadır.
+
+Bu program yararlı olması umuduyla, ancak HİÇBİR GARANTİ OLMAKSIZIN dağıtılmaktadır;
+SATILABİLİRLİK veya BELİRLİ BİR AMACA UYGUNLUK zımni garantisi dahi verilmemektedir.
+
+Lisansın açıkça tanımadığı tüm haklar saklıdır.
+
+
+EK KOŞULLAR (AGPL v3, 7. madde)
+-------------------------------
+
+Lisansın 7. maddesinin izin verdiği ölçüde, bu programın ve ondan türetilen her çalışmanın
+dağıtımı için aşağıdaki ek koşullar geçerlidir:
+
+1. Yazar atfının korunması — madde 7(b)
+   Kaynak dosyalarındaki telif bildirimleri, bu NOTICE dosyası ve programın “Hakkında”
+   penceresinde yer alan “Berkay Çelik” yazar atfı ile telif bildirimi, programın ve ondan
+   türetilen çalışmaların dağıtılan tüm kopyalarında (kaynak kod ya da çalıştırılabilir
+   biçim) eksiksiz korunmalıdır. Etkileşimli arayüze sahip türev çalışmalar, özgün yazarı
+   belirten bu atfı kullanıcıya kolayca erişilebilir biçimde göstermeye devam etmelidir.
+
+2. Kökenin yanlış gösterilmemesi — madde 7(c)
+   Programın kökeni yanlış gösterilemez. Değiştirilmiş sürümler, özgün sürümden farklı
+   olduklarını, değişikliği yapanın adını ve değişiklik tarihini açıkça belirtmelidir.
+   Özgün eser ya da herhangi bir parçası başka bir kişinin eseriymiş gibi sunulamaz.
+
+3. Yazar adının tanıtımda kullanılmaması — madde 7(d)
+   Yazarın adı, yazarın önceden yazılı izni olmaksızın değiştirilmiş sürümleri onaylamak,
+   desteklemek ya da tanıtmak amacıyla kullanılamaz. Bu hüküm, 1. maddede zorunlu tutulan
+   atfı engellemez.
+
+Bu koşullara aykırı dağıtım, lisansın 8. maddesi uyarınca lisansın sağladığı hakları
+sona erdirir.
+
+
+ADDITIONAL TERMS (English summary, AGPL v3 Section 7)
+-----------------------------------------------------
+
+Pursuant to Section 7 of the GNU Affero General Public License v3, the following
+additional terms apply to this program and to any work based on it:
+
+(b) The author attribution “Berkay Çelik” and the copyright notices contained in the
+    source files, in this NOTICE file and in the program's “About” (Hakkında) dialog must
+    be preserved in all copies and derivative works, in source or object form. Derivative
+    works with an interactive user interface must continue to display this attribution in
+    a reasonably accessible place.
+(c) The origin of this program must not be misrepresented. Modified versions must be
+    clearly marked as different from the original version, stating who made the changes
+    and when. The original work, or any part of it, must not be presented as the work of
+    another person.
+(d) The name of the author may not be used to endorse or promote modified versions
+    without prior written permission, except as required by term (b).
+
+In case of a conflict, the Turkish text above prevails.
+
+
+Kaynak kod / Source code: https://github.com/berquai/metin-dinleyici
+İletişim / Contact: berkcel@gmail.com
+
+Bu program üçüncü taraf bileşenler kullanır; lisansları THIRD_PARTY_NOTICES.md dosyasındadır.
