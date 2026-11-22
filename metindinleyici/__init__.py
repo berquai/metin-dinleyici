@@ -10,7 +10,7 @@
 
 APP_NAME = "Metin Dinleyici"
 APP_ORG = "MetinDinleyici"
-APP_VERSION = "4.7.2"
+APP_VERSION = "4.7.4"
 APP_YEAR = "2026"
 AUTHOR = "Berkay Çelik"
 AUTHOR_MAIL = "berkcel@gmail.com"

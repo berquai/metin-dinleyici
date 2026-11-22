@@ -153,11 +153,11 @@ class OverlayBar(QFrame):
             lay.addWidget(b)
             return b
 
-        self.prev_btn = btn("◀ Önceki", "Önceki cümle (Ctrl+←)", self.prev_clicked)
+        self.prev_btn = btn("◀ Önceki", "Önceki cümle (← ya da Ctrl+←)", self.prev_clicked)
         self.restart_btn = btn("↺ Tekrar Oku", "Cümleyi baştan oku (Ctrl+R)", self.restart_clicked)
         self.play_btn = btn("▶ Oku", "Oku / Duraklat (Boşluk)", self.play_clicked)
         self.play_btn.setMinimumWidth(120)
-        self.next_btn = btn("Sonraki ▶", "Sonraki cümle (Ctrl+→)", self.next_clicked)
+        self.next_btn = btn("Sonraki ▶", "Sonraki cümle (→ ya da Ctrl+→)", self.next_clicked)
         sep = QFrame(); sep.setFrameShape(QFrame.VLine); sep.setFrameShadow(QFrame.Sunken)
         lay.addWidget(sep)
         self.exit_btn = btn("⤢ Tam Ekrandan Çık", "Çık (Esc)", self.exit_clicked)

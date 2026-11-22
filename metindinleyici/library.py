@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QToolButton, QVBoxLayout, QWidget,
 )
 
+from . import crashlog
 from .extract import SUPPORTED
 from .library_info import document_info, human_size, move_to_trash, reveal_in_folder, scan_paths, validate_name
 
@@ -395,6 +396,8 @@ class LibraryView(QWidget):
         self.apply_sort()
         self.select_ids(selected)
         self.update_status()
+        if crashlog.SAFE_MODE:               # güvenli modda arka plan kapak taraması yapılmaz
+            need_info = []
         for doc_id, path in need_info:
             self.request_info(doc_id, path)
 

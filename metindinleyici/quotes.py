@@ -341,7 +341,7 @@ class QuotesView(QWidget):
             elif self.search.text().strip():
                 t = "Aramaya uyan kayıt yok."
             else:
-                t = "Henüz kayıt yok. Okurken M alıntılar, N not ekler, V vurgular."
+                t = "Henüz kayıt yok. Okurken M alıntılar, N not ekler, H vurgular."
         else:
             t = f"{n} kayıt" + (f" · {sel} seçili" if sel else "")
         self.status.setText(t)

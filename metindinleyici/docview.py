@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later  (ek koşullar için NOTICE dosyasına bakın)
 """Orijinal belge paneli: PDF ve EPUB sayfalarını görüntüler, gezinme, yakınlaştırma, resim kaydetme.
 
-Sayfalar ayrı ve tek bir iş parçacığında çizilir (PyMuPDF belge nesneleri iş parçacığı güvenli
-değildir). Dosya diske kilitlenmesin diye belleğe okunarak açılır: Windows açık dosyaları
+Sayfalar ayrı ve tek bir iş parçacığında çizilir; PDF motoru programın başka yerlerinde de (metin çıkarma,
+kütüphane kapakları) arka planda çalıştığı için her çağrı ortak kilitle korunur (bkz. pdflock.py). Dosya diske kilitlenmesin diye belleğe okunarak açılır: Windows açık dosyaları
 yeniden adlandırmaya ve silmeye izin vermez.
 """
 import os
@@ -15,6 +15,8 @@ from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QFileDialog, QHBoxLayout, QInputDialog, QLabel, QMenu, QMessageBox,
     QScrollArea, QSpinBox, QToolButton, QVBoxLayout, QWidget, QAbstractSpinBox,
 )
+
+from .pdflock import FITZ_LOCK   # PDF motoruna aynı anda tek iş parçacığı (bkz. pdflock.py)
 
 ZOOMS = [("Genişliğe sığdır", "width"), ("Sayfaya sığdır", "page"), ("%50", 0.5), ("%75", 0.75), ("%100", 1.0),
          ("%125", 1.25), ("%150", 1.5), ("%200", 2.0), ("%300", 3.0)]
@@ -38,6 +40,10 @@ class _Worker:
         self.path = None
 
     def _open(self, path):
+        with FITZ_LOCK:
+            return self._open_locked(path)
+
+    def _open_locked(self, path):
         if self.path != path:
             self._close()
             fitz = _fitz()
@@ -48,6 +54,10 @@ class _Worker:
         return self.doc
 
     def _close(self):
+        with FITZ_LOCK:
+            self._close_locked()
+
+    def _close_locked(self):
         if self.doc is not None:
             try:
                 self.doc.close()
@@ -56,6 +66,10 @@ class _Worker:
         self.doc, self.path = None, None
 
     def info(self, path):
+        with FITZ_LOCK:
+            return self._info(path)
+
+    def _info(self, path):
         doc = self._open(path)
         if doc.needs_pass:
             raise RuntimeError("Belge parola korumalı.")
@@ -69,6 +83,10 @@ class _Worker:
         return {"count": len(doc), "labels": labels, "sizes": sizes}
 
     def render(self, path, index, zoom, rotate):
+        with FITZ_LOCK:
+            return self._render(path, index, zoom, rotate)
+
+    def _render(self, path, index, zoom, rotate):
         fitz = _fitz()
         doc = self._open(path)
         page = doc[index]
@@ -76,6 +94,10 @@ class _Worker:
         return pix.width, pix.height, pix.stride, bytes(pix.samples)
 
     def save(self, path, index, dpi, out, rotate):
+        with FITZ_LOCK:
+            return self._save(path, index, dpi, out, rotate)
+
+    def _save(self, path, index, dpi, out, rotate):
         fitz = _fitz()
         doc = self._open(path)
         z = dpi / 72
@@ -101,9 +123,13 @@ class _Signals(QObject):
 
 
 class DocView(QWidget):
+    offset_changed = Signal(int)          # kullanıcı sayfa kaymasını ayarladı (belgeye özel saklanır)
+
     def __init__(self, settings, parent=None):
         super().__init__(parent)
         self.settings = settings
+        self.offset = 0                   # sayfa kayması: okunan sayfa ile gösterilen sayfa arasındaki fark
+        self._last_base = None
         self.worker = _Worker()
         self.sig = _Signals(self)
         self.sig.info_ready.connect(self.on_info)
@@ -164,6 +190,13 @@ class DocView(QWidget):
         tb("+", "Yakınlaştır (Ctrl+tekerlek)", lambda: self.step_zoom(1))
         bar.addStretch(1)
         self.reading_btn = tb("⌖", "Okunan cümlenin sayfasına git", self.goto_reading)
+        self.calib_btn = tb("⇆ Eşle", "Sayfa kalibrasyonu: panel yanlış sayfayı gösteriyorsa okunan metnin bulunduğu "
+                                      "sayfayı açın (◀ ▶ ile) ve bu düğmeye basın. Aradaki fark bu belge için "
+                                      "hatırlanır ve sonraki tüm sayfalara uygulanır.", self.calibrate_here)
+        self.offset_label = QLabel()
+        self.offset_label.setToolTip("Bu belgeye uygulanan sayfa kayması. Sıfırlamak için ⋯ menüsü.")
+        self.offset_label.hide()
+        bar.addWidget(self.offset_label)
         self.follow = QCheckBox("İzle")
         self.follow.setToolTip("Okuma ilerledikçe okunan cümlenin sayfasını kendiliğinden göster")
         self.follow.setFocusPolicy(Qt.NoFocus)
@@ -182,6 +215,10 @@ class DocView(QWidget):
         menu.addSeparator()
         menu.addAction("Saat Yönünde Döndür", lambda: self.set_rotate(self.rotate + 90))
         menu.addAction("Döndürmeyi Sıfırla", lambda: self.set_rotate(0))
+        menu.addSeparator()
+        menu.addAction("Gösterilen Sayfayı Okunan Sayfa Olarak Eşle", self.calibrate_here)
+        menu.addAction("Sayfa Kaymasını Elle Ayarla…", self.ask_offset)
+        menu.addAction("Sayfa Kaymasını Sıfırla", lambda: self.change_offset(0))
         menu.addSeparator()
         menu.addAction("Belgeyi Varsayılan Uygulamada Aç", self.open_external)
         more.setMenu(menu)
@@ -244,6 +281,7 @@ class DocView(QWidget):
         self.gen += 1
         self.path, self.count, self.labels, self.sizes = None, 0, [], []
         self.index, self.image, self.reading_index, self.reading_label = 0, None, None, None
+        self._last_base = None
         self.page_label.clear()
         self.page_label.resize(0, 0)
         self.info.setText("Belge açık değil.")
@@ -269,13 +307,78 @@ class DocView(QWidget):
         self.index = -1
         self.show_page(start)
 
-    def page_for_label(self, label):
-        """Okuma alanındaki bölüm etiketinden ('Sayfa 45') sayfa sırasını bulur."""
+    def base_page_for_label(self, label):
+        """Okuma alanındaki bölüm etiketinden ('Sayfa 45') sayfa sırasını bulur (kayma uygulanmadan).
+        Aynı etiket birden çok sayfada varsa (ör. her bölümde yeniden 1'den başlayan numaralar) bir önceki
+        okunan sayfaya en yakın olanı seçilir; ilk eşleşmeye atlamak panelin yanlış sayfayı izlemesine yol açıyordu."""
         lab = label[6:] if label.startswith("Sayfa ") else label
-        try:
-            return self.labels.index(lab)
-        except ValueError:
+        hits = [k for k, l in enumerate(self.labels) if l == lab]
+        if not hits:
+            if lab.isdigit() and 0 < int(lab) <= self.count:
+                return int(lab) - 1
             return None
+        if len(hits) == 1:
+            return hits[0]
+        ref = self._last_base if self._last_base is not None else self.index
+        return min(hits, key=lambda k: abs(k - ref))
+
+    def page_for_label(self, label):
+        """Sayfa kayması (kalibrasyon) uygulanmış sayfa sırası."""
+        base = self.base_page_for_label(label)
+        if base is None:
+            return None
+        self._last_base = base
+        return max(0, min(self.count - 1, base + self.offset))
+
+    # ── sayfa kalibrasyonu ──
+    def set_offset(self, n):
+        """Belge açılırken kaydedilmiş kaymayı uygular (sinyal göndermez)."""
+        self.offset = int(n or 0)
+        self._last_base = None
+        self.update_offset_label()
+        if self.count and self.reading_label:
+            self.reading_index = self.page_for_label(self.reading_label)
+            self.update_controls()
+
+    def change_offset(self, n):
+        n = int(n)
+        if n == self.offset:
+            return
+        self.offset = n
+        self.update_offset_label()
+        if self.count and self.reading_label:
+            self.reading_index = self.page_for_label(self.reading_label)
+            self.update_controls()
+            if self.reading_index is not None:
+                self.show_page(self.reading_index)
+        self.offset_changed.emit(n)
+
+    def calibrate_here(self):
+        """Şu an gösterilen sayfa = okunan cümlenin sayfası: aradaki farkı kayma olarak kaydeder."""
+        if not self.count or not self.reading_label:
+            QMessageBox.information(self, "Sayfa kalibrasyonu",
+                                    "Önce bir PDF açıp okumaya başlayın; ardından okunan metnin bulunduğu sayfayı "
+                                    "◀ ▶ ile açıp “Eşle”ye basın.")
+            return
+        base = self.base_page_for_label(self.reading_label)
+        if base is None:
+            QMessageBox.information(self, "Sayfa kalibrasyonu",
+                                    "Okunan cümlenin sayfa bilgisi belgede bulunamadı; kayma “⋯ › Sayfa Kaymasını "
+                                    "Elle Ayarla” ile girilebilir.")
+            return
+        self.change_offset(self.index - base)
+
+    def ask_offset(self):
+        n, ok = QInputDialog.getInt(
+            self, "Sayfa kayması",
+            "Okunan sayfaya göre kaç sayfa ileri (+) ya da geri (−) gidilsin?\n"
+            "Ör. panel hep 2 sayfa geriden geliyorsa 2 yazın.", self.offset, -9999, 9999)
+        if ok:
+            self.change_offset(n)
+
+    def update_offset_label(self):
+        self.offset_label.setText(f"kayma {self.offset:+d}")
+        self.offset_label.setVisible(bool(self.offset))
 
     # ── gösterim ──
     def show_page(self, i):
@@ -348,6 +451,7 @@ class DocView(QWidget):
         lab = self.labels[self.index] if has and self.index < len(self.labels) else ""
         self.page_spin.setToolTip(f"Belgedeki sayfa etiketi: {lab}" if lab and lab != str(self.index + 1) else "")
         self.reading_btn.setEnabled(has and self.reading_index is not None)
+        self.calib_btn.setEnabled(has and bool(self.reading_label))
 
     def on_zoom_changed(self):
         self.settings.setValue("doc_zoom", str(self.zoom.currentData()))

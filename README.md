@@ -5,10 +5,6 @@ PDF, EPUB, DOCX ve TXT belgeleri için sesli okuma uygulaması.
 Copyright © 2026 Berkay Çelik · <berkcel@gmail.com>
 Lisans: **AGPL-3.0-or-later**, yazar atfını koruyan ek koşullarla (bkz. `NOTICE`).
 
-## İndirme
-
-Hazır kurulum dosyasını [Releases](https://github.com/berquai/metin-dinleyici/releases) sayfasından indirebilirsiniz. Kaynak koddan çalıştırmak ya da kendiniz paketlemek için aşağıdaki bölümlere bakın.
-
 ## Çalıştırma
 
 ```
@@ -59,6 +55,7 @@ da erişilebilir kılmanız gerekir. En kolay iki yol:
 - Belge veritabanı (kaldığınız yer, ileride kütüphane ve alıntılar):
   `%LOCALAPPDATA%\MetinDinleyici\Metin Dinleyici\metin_dinleyici.db`
 - Metin önbelleği: aynı klasörde `metin_onbellek`
+- Hata günlüğü: aynı klasörde `gunluk\metin_dinleyici.log` (Yardım › Hata Günlüğünü Göster)
 
 Belgeler dosya yoluna değil içeriğe göre tanınır; dosyayı yeniden adlandırsanız ya da başka
 klasöre taşısanız da kaldığınız yer korunur. Sürüm 3'te kaydedilmiş konumlar, belge ilk kez
@@ -92,6 +89,8 @@ metindinleyici/
   power.py                 uyku modunu engelleme
   guide.py                 kullanım kılavuzu (F1)
   selftest.py              paketlenmiş program için öz-sınama
+  crashlog.py              hata günlüğü (kara kutu), oturum izi, güvenli mod
+  pdflock.py               PDF motoru için ortak kilit (iş parçacığı güvenliği)
 packaging/
   build.bat, build.ps1     kurulum dosyası hazırlama betiği
   MetinDinleyici.spec      PyInstaller derleme tarifi
@@ -100,7 +99,67 @@ packaging/
   metin_dinleyici.ico      program simgesi
 ```
 
+## Sorun giderme: program açılmıyor ya da kendiliğinden kapanıyor
+
+1. **Günlüğe bakın:** Yardım › Hata Günlüğünü Göster ya da Windows Gezgini'nin adres çubuğuna
+   `%LOCALAPPDATA%\MetinDinleyici\Metin Dinleyici\gunluk` yazın. `metin_dinleyici.log` dosyasının son
+   açılışa ait bölümü (son `=====` çizgisinden sonrası) nedeni gösterir:
+   - `Fatal Python error` / `Windows fatal exception` → programın içinde (PDF motoru, Qt, ses) bir çökme;
+     altındaki satırlar hangi işlemde olduğunu gösterir. **Not:** Windows'ta `code 0xe06d7363` gibi satırlardan
+     sonra günlük yazılmaya devam ediyorsa o kayıt zararsızdır (Qt'nin kendi içinde yakalayıp atlattığı bir
+     istisna); gerçek çökmede ondan sonra o oturuma ait başka satır gelmez.
+   - `aşama: pencere gösterildi` satırından sonra **hiçbir iz yoksa** → program dışarıdan sonlandırılmış
+     olabilir (çoğunlukla kurum bilgisayarlarındaki güvenlik yazılımı).
+   - `Ana pencere gizlendi` → pencere kapanmadan görünmez olmuş; altındaki satırlar nedenini gösterir.
+2. **Güvenli mod:** Programı açarken **Shift** tuşunu basılı tutun (ya da `MetinDinleyici.exe --guvenli`).
+   Bir açılış yarıda kesildiyse program bir sonraki açılışta güvenli modu kendisi önerir. Güvenli modda
+   pencere/panel yerleşimi varsayılana döner, çevrimiçi ses moduyla açılır, kapak taraması o oturumda yapılmaz;
+   kütüphane, alıntılar ve kaldığınız yerler korunur.
+3. **Windows Olay Görüntüleyicisi:** Windows Günlükleri › Uygulama altında *Application Error* kaydındaki
+   "Hatalı modül adı", çökmenin hangi bileşende olduğunu söyler.
+
 ## Sürüm notları
+
+### 4.7.4
+- **← / → ile cümle geçişi:** metin alanındayken ok tuşları önceki / sonraki cümleye geçer (Ctrl+← / → de çalışır).
+  Arama kutusu, listeler ve açılır kutular ok tuşlarını eskisi gibi kendileri kullanır.
+- **Sayfa kalibrasyonu (Orijinal Belge paneli):** panel okunan metinden farklı bir sayfa gösteriyorsa doğru sayfayı
+  açıp **⇆ Eşle**'ye basın; aradaki fark (ör. “kayma +2”) belgeye özel hatırlanır. Elle girmek ya da sıfırlamak için
+  ⋯ menüsü. Aynı sayfa etiketi birden çok kez geçen PDF'lerde (her bölüm 1'den başlıyorsa) panel artık ilk eşleşmeye
+  değil, okunan yere en yakın sayfaya gidiyor.
+- **Üst çubuk yeniden düzenlendi:** Dosya Aç · Metni Düzenle · Belgeyi Kapat | panel düğmeleri | belge adı | arama.
+  Panel düğmeleri açıklayıcı adlar aldı ve hepsi var: Kütüphane Paneli, Orijinal Belge Paneli, Alıntılar ve Notlar
+  Paneli, Kontrol Paneli.
+- **Arama:** ▲ önceki (Shift+F3, Shift+Enter), ▼ sonraki (F3, Enter), **⇤ Baştan Ara** (ilk geçtiği yer, Ctrl+Shift+F3)
+  ve kaçıncı sonuçta olunduğunu gösteren sayaç.
+- **Vurgulama kısayolu V yerine H.**
+- **İnceltme işaretleri:** â, î, û sese giden metinde düz harfe çevriliyor (ekrandaki metin değişmez); sesler bu
+  harfleri yanlış okuyordu. Düzen › İnceltme İşaretlerini Düz Oku ile kapatılabilir.
+- **Düzeltme — panel yerleşimi her açılışta sıfırlanıyordu:** yerleşim kaydediliyordu ama büyütülmüş pencerede Qt
+  onu küçük pencereye göre kuruyor, program da kütüphane ve kontrol paneli genişliğini varsayılana çekiyordu. Artık
+  kayıtlı yerleşim pencere boyutu oturduktan sonra yeniden uygulanıyor. Yeni: Görünüm › Panel Yerleşimi ›
+  Panel Yerleşimini Hatırla / Panel Düzenini Varsayılana Sıfırla.
+
+### 4.7.3
+- **Düzeltme — büyütülmüş pencereyle açılmama:** Pencere büyütülmüş hâlde kapatılınca sonraki açılışlar çöküyordu
+  (beyaz pencere görünüp kayboluyordu). Sebep: açılışta pencere büyütülürken boyut henüz uygulanmadan program
+  pencereyi dar sanıyor ve kontrol panelini alta taşımaya kalkıyordu; Qt, kayıtlı panel yerleşimini kurarken yapılan
+  bu taşımada çöküyordu. Artık panel yerleşimi kararı pencere ekrana oturduktan sonra veriliyor, büyütülmüş
+  pencere ekran genişliğinde sayılıyor ve boyut olaylarının içinde panel taşınmıyor.
+- **Kara kutu:** hatalar ve çökmeler `gunluk\metin_dinleyici.log` dosyasına yazılıyor (C katmanındaki çökmeler
+  dahil; açılış aşamaları, pencerenin ekrandaki konumu, pencereyi gizleyen ya da kapatan çağrı). Paketlenmiş
+  programda ekrana hiçbir şey yazılamadığı için önceden sessizce kapanan durumlar artık iz bırakıyor.
+- **Güvenli mod:** açılışta Shift, `--guvenli` ya da önceki açılış kesildiyse kendiliğinden öneri.
+- **PDF motoru tek kapıdan:** PyMuPDF iş parçacığı güvenli değil; metin çıkarma, kütüphane kapakları ve orijinal
+  belge görünümü artık ortak bir kilitle sırayla çalışıyor (`pdflock.py`). Uzun OCR işi kilit dışında.
+- Yardım › Hata Günlüğünü Göster.
+- **Düzeltme — çevrimiçi sesler (“'lazy_import' object is not callable”):** Python 3.15 ile derlenen exe'de
+  çevrimiçi sesler çalışmıyordu (3.15'in yeni tembel içe aktarma düzeni). `build.ps1` artık Python 3.13'ü
+  (yoksa 3.12 / 3.14) seçiyor, 3.15 ile kurulmuş eski derleme ortamını kendiliğinden yeniliyor; program da açılışta
+  tembel içe aktarmayı kapatıyor. Öz-sınama, 3.15 ile derlenmiş paketi uyarıyla durduruyor. Ses hatalarının tam
+  ayrıntısı artık hata günlüğüne yazılıyor.
+- **Yeni çok dilli sesler:** William (Avustralya), Rémy, Giuseppe, Hyunsu, Seraphina, Vivienne ve Thalita eklendi;
+  Microsoft'un sunduğu 12 çok dilli sesin tamamı listede (her biri Türkçe metinle denendi).
 
 ### 4.7.2
 - OCR, Türkçe karakter içeren klasörlerde (Masaüstü, “Yeni klasör”, Türkçe kullanıcı adları) de çalışıyor:
@@ -140,7 +199,7 @@ packaging/
 - Düzeltme: tema uygulandıktan sonra kontrol paneli içeriğinin sağdan taşması.
 
 ### 4.5
-- **Orijinal belge paneli** (üst çubukta “Orijinal”, F7): PDF ve EPUB sayfaları metnin yanında.
+- **Orijinal belge paneli** (üst çubukta “Orijinal Belge Paneli”, F7): PDF ve EPUB sayfaları metnin yanında.
   - İlk / önceki / sonraki / son sayfa, sayfa numarasına atlama, PageUp/PageDown/Home/End.
   - Genişliğe ya da sayfaya sığdır, %50–%300; Ctrl+tekerlek ile yakınlaştırma. Sayfa sonunda tekerlekle
     kaydırmaya devam edince sonraki sayfaya geçer.
@@ -160,7 +219,7 @@ packaging/
 
 ### 4.4
 - **Alıntılar, notlar, vurgular** (Alıntılar menüsü; sağ tık menüsünde de).
-  - M: okunan cümleyi (ya da seçili metni) alıntılar · N: cümleye not ekler · V: vurgular / vurguyu kaldırır ·
+  - M: okunan cümleyi (ya da seçili metni) alıntılar · N: cümleye not ekler · H: vurgular / vurguyu kaldırır ·
     Shift+M: son kaydın notunu ve etiketlerini düzenler · C: okunan cümleyi kopyalar.
   - Alıntı kaynakta yazandır; not sizin yazdığınızdır. Metinde alıntılar düz, notlar noktalı çizgiyle,
     vurgular renkle işaretlenir; işaretin üzerine gelince not ve etiketler görünür.

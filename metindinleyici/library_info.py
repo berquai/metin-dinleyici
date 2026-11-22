@@ -38,25 +38,9 @@ def document_info(path, cover_path=None):
     ext = os.path.splitext(path)[1].lower()
     info = {"pages": None, "pages_approx": False, "author": "", "meta_title": "", "cover": False}
     if ext in (".pdf", ".epub"):
-        fitz = _fitz()
-        doc = fitz.open(path)
-        try:
-            if doc.needs_pass:
-                return info
-            info["pages"] = len(doc)
-            info["pages_approx"] = ext == ".epub"        # EPUB'da sayfa sayısı yazı boyutuna bağlıdır
-            md = doc.metadata or {}
-            info["author"] = _clean_meta(md.get("author"))
-            info["meta_title"] = _clean_meta(md.get("title"))
-            if cover_path and len(doc):
-                page = doc[0]
-                zoom = COVER_WIDTH / max(1, page.rect.width)
-                pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
-                os.makedirs(os.path.dirname(cover_path), exist_ok=True)
-                pix.save(cover_path)
-                info["cover"] = True
-        finally:
-            doc.close()
+        from .pdflock import FITZ_LOCK
+        with FITZ_LOCK:          # PDF motoruna aynı anda tek iş parçacığı (bkz. pdflock.py)
+            return _pdf_info(path, ext, cover_path, info)
     elif ext == ".docx":
         try:
             with zipfile.ZipFile(path) as z:
@@ -80,6 +64,29 @@ def document_info(path, cover_path=None):
             info["pages_approx"] = True
         except OSError:
             pass
+    return info
+
+
+def _pdf_info(path, ext, cover_path, info):
+    fitz = _fitz()
+    doc = fitz.open(path)
+    try:
+        if doc.needs_pass:
+            return info
+        info["pages"] = len(doc)
+        info["pages_approx"] = ext == ".epub"        # EPUB'da sayfa sayısı yazı boyutuna bağlıdır
+        md = doc.metadata or {}
+        info["author"] = _clean_meta(md.get("author"))
+        info["meta_title"] = _clean_meta(md.get("title"))
+        if cover_path and len(doc):
+            page = doc[0]
+            zoom = COVER_WIDTH / max(1, page.rect.width)
+            pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
+            os.makedirs(os.path.dirname(cover_path), exist_ok=True)
+            pix.save(cover_path)
+            info["cover"] = True
+    finally:
+        doc.close()
     return info
 
 

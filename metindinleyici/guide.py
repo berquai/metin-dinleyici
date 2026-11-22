@@ -41,11 +41,13 @@ kapatılabilir. Kapattığınız paneli <b>Görünüm</b> menüsünden geri aça
 <ul>
 <li><b>▶ Oku / ⏸ Duraklat</b>: <kbd>Boşluk</kbd>. Duraklatınca aynı yerden devam eder.</li>
 <li><b>■ Durdur</b>: <kbd>Esc</kbd>.</li>
-<li><b>◀ Önceki / Sonraki ▶</b> cümle: <kbd>Ctrl+←</kbd> / <kbd>Ctrl+→</kbd>.</li>
+<li><b>◀ Önceki / Sonraki ▶</b> cümle: <kbd>←</kbd> / <kbd>→</kbd> ya da <kbd>Ctrl+←</kbd> / <kbd>Ctrl+→</kbd>.</li>
 <li><b>↺ Cümleyi Baştan Oku</b>: <kbd>Ctrl+R</kbd>.</li>
 <li><b>Bir cümleye çift tıklamak</b> okumayı oradan başlatır. Sağ tık › <b>Buradan Oku</b> da aynı işi yapar.</li>
 <li><b>Cümle</b> kutusuna numara yazıp Enter'a basmak ya da <b>Git</b> listesinden sayfa/bölüm seçmek o yere götürür.</li>
-<li><b>Metinde ara</b>: <kbd>Ctrl+F</kbd>, Enter sonraki eşleşmeye gider.</li>
+<li><b>Metinde ara</b>: <kbd>Ctrl+F</kbd>. Enter ya da <b>▼</b> (<kbd>F3</kbd>) sonraki, <kbd>Shift+Enter</kbd> ya da
+<b>▲</b> (<kbd>Shift+F3</kbd>) önceki eşleşmeye gider. <b>⇤ Baştan Ara</b> aranan ifadenin metindeki ilk geçtiği
+yere gider. Kutunun yanındaki sayı kaçıncı sonuçta olduğunuzu gösterir.</li>
 </ul>
 <h3>Okunan metni takip etmek</h3>
 <p><b>Okunan metni takip et</b> kutusu açıkken metin, okunan cümle görünür kalacak şekilde kayar
@@ -91,8 +93,11 @@ fare durunca kaybolur.</li>
 Uzun okumalarda gözü yormamak için. <kbd>Esc</kbd> ile çıkılır.</p>
 <h3>Paneller</h3>
 <ul>
-<li>Kütüphane <kbd>Ctrl+L</kbd>, Orijinal Belge <kbd>F7</kbd>, Alıntılar <kbd>F8</kbd>, Kontrol Paneli
-<kbd>F9</kbd>.</li>
+<li>Üst çubuktaki düğmeler ya da kısayollar panelleri açıp kapatır: Kütüphane Paneli <kbd>Ctrl+L</kbd>,
+Orijinal Belge Paneli <kbd>F7</kbd>, Alıntılar ve Notlar Paneli <kbd>F8</kbd>, Kontrol Paneli <kbd>F9</kbd>.</li>
+<li>Panellerin yeri, boyutu ve açık/kapalı durumu bir sonraki açılışta aynen geri gelir
+(<b>Görünüm › Panel Yerleşimi › Panel Yerleşimini Hatırla</b>). Varsayılan düzene dönmek için
+<b>Görünüm › Panel Yerleşimi › Panel Düzenini Varsayılana Sıfırla</b>.</li>
 <li>Kontrol Paneli <b>Görünüm › Kontrol Panelinin Konumu</b> ile dört kenardan birine ya da ayrı pencereye
 alınabilir. Alta veya üste alınınca bölümleri yan yana dizilir.</li>
 <li>Kontrol Paneli pencere genişliğiyle orantılı büyür/küçülür; kenarını sürükleyerek oranı değiştirirsiniz.</li>
@@ -133,7 +138,7 @@ için (ör. yedeği yeni bilgisayara taşıdığınızda) <b>＋ Ekle › Eksik 
 klasörü taratın: belgeler içeriklerine göre eşleştiği için dosya adları değişmiş olsa da bulunur.</p>
 """),
 ("orijinal", "5. Orijinal belge paneli", """
-<p>PDF ve EPUB belgelerin sayfalarını metnin yanında gösterir (üst çubukta <b>Orijinal</b>, <kbd>F7</kbd>).
+<p>PDF ve EPUB belgelerin sayfalarını metnin yanında gösterir (üst çubukta <b>Orijinal Belge Paneli</b>, <kbd>F7</kbd>).
 Dinlerken taranmış sayfayı ya da tabloları, resimleri gözle takip etmek için.</p>
 <ul>
 <li><b>⏮ ◀ ▶ ⏭</b>: ilk, önceki, sonraki, son sayfa. Sayfa numarasını yazıp Enter'a basarak da gidilir.
@@ -142,6 +147,9 @@ Panel seçiliyken <kbd>PageUp</kbd>, <kbd>PageDown</kbd>, <kbd>Home</kbd>, <kbd>
 <li>Yakınlaştırma: <b>Genişliğe sığdır</b>, <b>Sayfaya sığdır</b>, %50–%300, <b>−</b> / <b>+</b>,
 <kbd>Ctrl+tekerlek</kbd>.</li>
 <li><b>⌖</b>: okunan cümlenin sayfasına gider. <b>İzle</b> açıkken okuma ilerledikçe sayfa kendiliğinden değişir.</li>
+<li><b>⇆ Eşle</b> (sayfa kalibrasyonu): panel okunan metinden farklı bir sayfa gösteriyorsa, okunan metnin bulunduğu
+sayfayı ◀ ▶ ile açıp <b>⇆ Eşle</b>'ye basın. Aradaki fark (ör. “kayma +2”) bu belge için hatırlanır ve sonraki
+sayfalara da uygulanır. Elle girmek ya da sıfırlamak için <b>⋯</b> menüsü.</li>
 <li><b>⋯</b> menüsü: sayfayı resim olarak kaydet (150 / 300 / 600 dpi, PNG ya da JPEG; tez eki için 300 dpi
 yeterlidir), panoya kopyala, döndür, belgeyi varsayılan uygulamada aç.</li>
 </ul>
@@ -154,7 +162,7 @@ cümleyi metinde kalıcı olarak renklendirir.</p>
 <ul>
 <li><kbd>M</kbd>: okunan cümleyi alıntılar. Fareyle bir metin seçtiyseniz seçimi alıntılar (birkaç cümle de olabilir).</li>
 <li><kbd>N</kbd>: okunan cümleye not ekler.</li>
-<li><kbd>V</kbd>: okunan cümleyi vurgular; yeniden basınca vurgu kalkar.</li>
+<li><kbd>H</kbd>: okunan cümleyi vurgular (highlight); yeniden basınca vurgu kalkar.</li>
 <li><kbd>Shift+M</kbd>: son kaydın notunu ve etiketlerini düzenler. M ile hızlıca alıntılayıp etiketi sonra eklemek için.</li>
 <li><kbd>C</kbd>: okunan cümleyi panoya kopyalar.</li>
 <li>Aynı işlemler metne sağ tıklayınca da çıkar; sağ tık, tıkladığınız cümleye uygulanır.</li>
@@ -291,16 +299,18 @@ sözlüğü, ayarlar. Bunları seçerseniz bir kez daha onay istenir.</li>
 <tr><th align="left" colspan="2">Okuma</th></tr>
 <tr><td><kbd>Boşluk</kbd></td><td>Oku / Duraklat</td></tr>
 <tr><td><kbd>Esc</kbd></td><td>Durdur · tam ekrandan / odaklanmadan / düzenlemeden çık · yüklemeyi durdur</td></tr>
-<tr><td><kbd>Ctrl+←</kbd> / <kbd>Ctrl+→</kbd></td><td>Önceki / sonraki cümle</td></tr>
+<tr><td><kbd>←</kbd> / <kbd>→</kbd> · <kbd>Ctrl+←</kbd> / <kbd>Ctrl+→</kbd></td><td>Önceki / sonraki cümle</td></tr>
 <tr><td><kbd>Ctrl+R</kbd></td><td>Cümleyi baştan oku</td></tr>
 <tr><td><kbd>Ctrl+J</kbd></td><td>Okunan yere git</td></tr>
 <tr><td><kbd>Ctrl+Shift+F</kbd></td><td>Okunan metni takip et (aç/kapat)</td></tr>
 <tr><td><kbd>Ctrl+F</kbd></td><td>Metinde ara</td></tr>
+<tr><td><kbd>F3</kbd> / <kbd>Shift+F3</kbd></td><td>Sonraki / önceki arama sonucu</td></tr>
+<tr><td><kbd>Ctrl+Shift+F3</kbd></td><td>Baştan ara (ilk geçtiği yer)</td></tr>
 <tr><th align="left" colspan="2">Alıntılar</th></tr>
 <tr><td><kbd>C</kbd></td><td>Okunan cümleyi kopyala</td></tr>
 <tr><td><kbd>M</kbd></td><td>Okunan cümleyi (ya da seçimi) alıntıla</td></tr>
 <tr><td><kbd>N</kbd></td><td>Not ekle</td></tr>
-<tr><td><kbd>V</kbd></td><td>Vurgula / vurguyu kaldır</td></tr>
+<tr><td><kbd>H</kbd></td><td>Vurgula / vurguyu kaldır</td></tr>
 <tr><td><kbd>Shift+M</kbd></td><td>Son kaydın notunu ve etiketlerini düzenle</td></tr>
 <tr><td><kbd>F8</kbd></td><td>Alıntılar paneli</td></tr>
 <tr><td><kbd>Ctrl+Shift+X</kbd></td><td>Alıntıları dışa aktar</td></tr>
@@ -332,7 +342,7 @@ sözlüğü, ayarlar. Bunları seçerseniz bir kez daha onay istenir.</li>
 <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>İlk / son sayfa</td></tr>
 <tr><td><kbd>Ctrl+tekerlek</kbd></td><td>Yakınlaştır / uzaklaştır</td></tr>
 </table>
-<p>Tek harfli kısayollar (C, M, N, V) arama kutusunda ya da düzenleme modunda yazarken devreye girmez.</p>
+<p>Tek harfli kısayollar (C, M, N, H) ve ← / → arama kutusunda ya da düzenleme modunda yazarken devreye girmez.</p>
 """),
 ("sorunlar", "13. Sık karşılaşılan durumlar", """
 <dl>
@@ -341,7 +351,7 @@ sözlüğü, ayarlar. Bunları seçerseniz bir kez daha onay istenir.</li>
 ortam değişkeni tanımlıysa uygulama onu kullanır. Geçici olarak çevrimdışı Windows seslerine geçebilirsiniz.</dd>
 <dt><b>“Ahmet” sesi bazen hiç okumuyor.</b></dt>
 <dd>Bu ses Microsoft sunucusunda kararsız çalışıyor; sorun uygulamada değil. Emel'i ya da çok dilli erkek
-seslerinden birini (Brian, Andrew, Florian) deneyin.</dd>
+seslerinden birini (William, Andrew, Brian, Florian) deneyin.</dd>
 <dt><b>Taranmış bir PDF'te metin çıkmıyor.</b></dt>
 <dd>“Taranmış sayfalar için OCR” seçeneğinin açık olduğundan ve Tesseract OCR'ın Türkçe/İngilizce dil verisiyle
 kurulu olduğundan emin olun; sonra F5.</dd>
@@ -355,7 +365,8 @@ kurulu olduğundan emin olun; sonra F5.</dd>
 <dt><b>Kontrol paneli alta indi.</b></dt>
 <dd>Pencere üç panele dar gelince panel kendiliğinden alta iner; pencereyi genişletin ya da kütüphaneyi kapatın.</dd>
 <dt><b>Panelleri kaybettim.</b></dt>
-<dd>Görünüm menüsünden açın; ya da Dosya › Temizlik ve Sıfırlama › “Tüm ayarlar ve pencere yerleşimi”.</dd>
+<dd>Üst çubuktaki panel düğmeleriyle ya da Görünüm menüsünden açın; düzeni toptan geri almak için
+Görünüm › Panel Yerleşimi › Panel Düzenini Varsayılana Sıfırla.</dd>
 </dl>
 """),
 ("gizlilik", "14. Veriler ve gizlilik", """

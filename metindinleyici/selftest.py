@@ -79,7 +79,13 @@ def _checks():
         where = "paketin içindeki" if bundled else "BİLGİSAYARA KURULU (paket dışı!)"
         return f"{where} Tesseract, diller: {lang}, OCR: {got.strip()!r}"
 
-    return [("Dosyalar", resources), ("Arayüz", qt), ("PDF", pdf), ("Word", docx_), ("EPUB", epub),
+    def python():
+        v = sys.version_info
+        assert v[:2] < (3, 15), (f"Python {v.major}.{v.minor} ile derlenmiş: bu sürümün tembel içe aktarma düzeni "
+                                 "paketlenmiş programda çevrimiçi sesleri bozabiliyor. Python 3.13 ile derleyin.")
+        return f"Python {v.major}.{v.minor}.{v.micro}"
+
+    return [("Python", python), ("Dosyalar", resources), ("Arayüz", qt), ("PDF", pdf), ("Word", docx_), ("EPUB", epub),
             ("Çevrimiçi ses", edge), ("OCR", ocr)]
 
 

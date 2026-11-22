@@ -20,6 +20,7 @@ Böylece "ss. 12-15" gibi özel bir kalıbı genel "s. 12" kuralından önce yak
 biri geçiyorsa (büyük/küçük harf ayrımı yapılmadan) kural o yerde uygulanmaz.
 """
 import re
+import unicodedata
 from dataclasses import dataclass, field
 
 KIND_WORD = "word"
@@ -200,10 +201,26 @@ def apply_rule(rule, rx, text):
     return out, count
 
 
+# ───────────────────────────── İnceltme işareti ─────────────────────────────
+# Sinir ağı sesleri (özellikle çok dilli sesler) â, î, û harflerini Türkçe okumuyor: "edebî" → "edebiy",
+# "kâr" → yabancı bir ünlü. Sese giden metinde bu harfler düz karşılıklarına çevrilir; ekrandaki metin değişmez.
+# Kullanıcı kuralları önce çalışır: "hikâye" gibi bir kelimeye özel okunuş sözlükte yine tanımlanabilir.
+SIMPLIFY_CIRCUMFLEX = True                # ana pencere ayara göre değiştirir (Düzen › Telaffuz menüsü)
+_CIRCUMFLEX = str.maketrans({"â": "a", "Â": "A", "î": "i", "Î": "İ", "û": "u", "Û": "U",
+                             "ˆ": "", "̂": ""})          # ayrı yazılmış şapka işaretleri de atılır
+
+
+def simplify_circumflex(text):
+    if not any(c in text for c in "âÂîÎûÛˆ̂"):
+        return text
+    return unicodedata.normalize("NFC", text).translate(_CIRCUMFLEX)
+
+
 class Pronouncer:
     """Etkin kuralları sırayla uygular. Belgeye özel kurallar yalnızca o belgede çalışır."""
 
-    def __init__(self, rules=(), doc_id=None):
+    def __init__(self, rules=(), doc_id=None, simplify=None):
+        self.simplify = SIMPLIFY_CIRCUMFLEX if simplify is None else simplify
         self.compiled = []
         for r in rules:
             if not r.enabled or (r.doc_id and r.doc_id != doc_id):
@@ -214,12 +231,12 @@ class Pronouncer:
 
     def apply(self, text):
         if not self.compiled:
-            return text
+            return simplify_circumflex(text) if self.simplify else text
         out = text
         for r, rx in self.compiled:
             out, _ = apply_rule(r, rx, out)
-        out = re.sub(r"\s{2,}", " ", out).strip()
-        return out or text                     # tüm cümle silindiyse aslını oku
+        out = re.sub(r"\s{2,}", " ", out).strip() or text   # tüm cümle silindiyse aslını oku
+        return simplify_circumflex(out) if self.simplify else out
 
     def trace(self, text):
         """Ön izleme için: her kuralın etkisini sırayla döndürür → (sonuç, [(kural, adet)])."""
@@ -228,10 +245,11 @@ class Pronouncer:
             out, n = apply_rule(r, rx, out)
             if n:
                 steps.append((r, n))
-        return re.sub(r"\s{2,}", " ", out).strip() or text, steps
+        out = re.sub(r"\s{2,}", " ", out).strip() or text
+        return (simplify_circumflex(out) if self.simplify else out), steps
 
     def __bool__(self):
-        return bool(self.compiled)
+        return bool(self.compiled) or self.simplify
 
 
 # Başlangıç kuralları: ilk açılışta bir kez eklenir; hepsi düzenlenebilir ve silinebilir.

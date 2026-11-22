@@ -42,18 +42,42 @@ if ($Clean) {
 New-Item -ItemType Directory -Force -Path $Build, $Dist | Out-Null
 
 # ── 1. Python ──────────────────────────────────────────────────────────────
+# Exe olgun bir Python sürümüyle derlenir (3.13 öncelikli). Python 3.15 yeni "tembel içe aktarma" (lazy import)
+# düzeniyle geldi; 3.15 ile paketlenen 4.7.3 denemesinde çevrimiçi sesler "'lazy_import' object is not callable"
+# hatası verdi. PyInstaller ve kullanılan kütüphaneler bu düzenle yeterince sınanana kadar 3.15 kullanılmaz.
 Step "Python ortamı hazırlanıyor"
+$MinPy = [version]"3.10"; $MaxPy = [version]"3.15"      # [MinPy, MaxPy) aralığı
+$Preferred = @("3.13", "3.12", "3.14", "3.11", "3.10")
+function Get-PyVersion($exe, $argv) {
+    try {
+        $v = & $exe @argv -c "import sys; print('%d.%d' % sys.version_info[:2])" 2>$null
+        if ($LASTEXITCODE -eq 0 -and $v) { return [version](($v | Select-Object -First 1).Trim()) }
+    } catch {}
+    return $null
+}
+if (Test-Path $Py) {
+    $vv = Get-PyVersion $Py @()
+    if (-not $vv -or $vv -lt $MinPy -or $vv -ge $MaxPy) {
+        Write-Host "Mevcut derleme ortamı Python $vv ile kurulmuş; uygun bir sürümle yeniden kuruluyor." -ForegroundColor Yellow
+        Remove-Item $Venv -Recurse -Force
+    }
+}
 if (-not (Test-Path $Py)) {
     $base = $null
-    $cands = @(@{ Exe = "py"; Args = @("-3") }, @{ Exe = "python"; Args = @() })
+    $cands = @()
+    foreach ($p in $Preferred) { $cands += @{ Exe = "py"; Args = @("-$p") } }
+    $cands += @{ Exe = "python"; Args = @() }
     foreach ($c in $cands) {
-        try {
-            $v = & $c.Exe $c.Args -c "import sys; print('%d.%d' % sys.version_info[:2])" 2>$null
-            if ($LASTEXITCODE -eq 0 -and $v -and [version]$v -ge [version]"3.10") { $base = $c; break }
-        } catch {}
+        $v = Get-PyVersion $c.Exe $c.Args
+        if ($v -and $v -ge $MinPy -and $v -lt $MaxPy) { $base = $c; break }
     }
-    if (-not $base) { Fail "Python 3.10 veya üstü bulunamadı. python.org'dan kurun (Add to PATH işaretli)." }
-    & $base.Exe $base.Args -m venv $Venv
+    if (-not $base) {
+        Fail ("Derleme için uygun Python bulunamadı (3.10–3.14 arası gerekir; 3.15 henüz desteklenmiyor).`n" +
+              "Komut satırında 'py install 3.13' yazarak ya da python.org'dan Python 3.13 indirerek kurun; " +
+              "bilgisayardaki diğer Python sürümleri kalabilir.")
+    }
+    Write-Host ("Kullanılan Python: " + (Get-PyVersion $base.Exe $base.Args))
+    & $base.Exe @($base.Args) -m venv $Venv
     if ($LASTEXITCODE -ne 0) { Fail "Sanal ortam kurulamadı." }
 }
 & $Py -m pip install --upgrade pip --quiet --disable-pip-version-check

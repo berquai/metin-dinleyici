@@ -8,16 +8,27 @@ import os
 import subprocess
 import threading
 import time
+import traceback
 import wave
 
 EDGE_VOICES = [
+    # Çok dilli sesler Türkçeyi de okur; metindeki İngilizce özet, alıntı ya da künyeyi aynı sesle doğru dilde
+    # seslendirir. Ekim 2026'da her biri Türkçe akademik metinle denendi; "kararsız" olanlar sunucuda zaman zaman
+    # ses döndürmüyor (program yeniden dener, ama bekleme uzayabilir).
     ("Türkçe — Emel", "tr-TR-EmelNeural"),
     ("Türkçe — Ahmet (sunucuda kararsız)", "tr-TR-AhmetNeural"),
-    ("Çok dilli — Brian (erkek)", "en-US-BrianMultilingualNeural"),
-    ("Çok dilli — Andrew (erkek)", "en-US-AndrewMultilingualNeural"),
-    ("Çok dilli — Florian (erkek)", "de-DE-FlorianMultilingualNeural"),
-    ("Çok dilli — Emma (kadın)", "en-US-EmmaMultilingualNeural"),
-    ("Çok dilli — Ava (kadın)", "en-US-AvaMultilingualNeural"),
+    ("Çok dilli — William (erkek, Avustralya)", "en-AU-WilliamMultilingualNeural"),
+    ("Çok dilli — Andrew (erkek, ABD)", "en-US-AndrewMultilingualNeural"),
+    ("Çok dilli — Brian (erkek, ABD)", "en-US-BrianMultilingualNeural"),
+    ("Çok dilli — Florian (erkek, Almanya)", "de-DE-FlorianMultilingualNeural"),
+    ("Çok dilli — Rémy (erkek, Fransa)", "fr-FR-RemyMultilingualNeural"),
+    ("Çok dilli — Giuseppe (erkek, İtalya)", "it-IT-GiuseppeMultilingualNeural"),
+    ("Çok dilli — Hyunsu (erkek, Kore)", "ko-KR-HyunsuMultilingualNeural"),
+    ("Çok dilli — Ava (kadın, ABD)", "en-US-AvaMultilingualNeural"),
+    ("Çok dilli — Emma (kadın, ABD)", "en-US-EmmaMultilingualNeural"),
+    ("Çok dilli — Seraphina (kadın, Almanya)", "de-DE-SeraphinaMultilingualNeural"),
+    ("Çok dilli — Vivienne (kadın, Fransa; kararsız)", "fr-FR-VivienneMultilingualNeural"),
+    ("Çok dilli — Thalita (kadın, Brezilya; kararsız)", "pt-BR-ThalitaMultilingualNeural"),
     ("İngilizce (ABD) — Jenny", "en-US-JennyNeural"),
     ("İngilizce (ABD) — Guy", "en-US-GuyNeural"),
     ("İngilizce (İngiltere) — Sonia", "en-GB-SoniaNeural"),
@@ -149,7 +160,7 @@ def edge_synth_raw(text, voice, rate_pct, attempts=4):
     if importlib.util.find_spec("edge_tts") is None:
         raise RuntimeError("Çevrimiçi ses paketi eksik:\npy -m pip install --upgrade edge-tts")
     rate = f"{rate_pct - 100:+d}%"
-    last = None
+    last, last_tb = None, None
     for k in range(attempts):
         try:
             audio, words = asyncio.run(_edge_stream(text, voice, rate))
@@ -157,13 +168,16 @@ def edge_synth_raw(text, voice, rate_pct, attempts=4):
                 return audio, words
             last = RuntimeError("Ses servisi boş yanıt döndürdü.")
         except Exception as e:
-            last = e
+            last, last_tb = e, traceback.format_exc()
         time.sleep(0.3 * (k + 1))
+    if last_tb:                           # mesaj kutusunda yalnızca özet görünür; tam yığın kara kutuya
+        from . import crashlog
+        crashlog.write(f"Çevrimiçi ses üretilemedi ({voice}, {attempts} deneme). Son hata:\n{last_tb.rstrip()}", "HATA")
     if type(last).__name__ == "NoAudioReceived":
         raise RuntimeError(
             f"“{voice}” sesi Microsoft sunucusundan {attempts} denemede de ses döndürmedi.\n\n"
             "Bu ses sunucu tarafında kararsız çalışıyor; sorun programda değil. "
-            "Emel'i ya da listedeki çok dilli erkek seslerinden birini (Brian, Andrew, Florian) deneyin.")
+            "Emel'i ya da listedeki çok dilli erkek seslerinden birini (William, Andrew, Brian, Florian) deneyin.")
     raise RuntimeError("Çevrimiçi ses üretilemedi. İnternet bağlantısını kontrol edin; sorun sürerse:\n"
                        f"py -m pip install --upgrade edge-tts\n\nAyrıntı: {last}")
 

@@ -153,16 +153,25 @@ def extract_pdf(path, opts, progress, cancel):
         import pymupdf as fitz   # yeni paket adı
     except ImportError:
         import fitz              # eski PyMuPDF sürümleri
-    doc = fitz.open(path)
+    from .pdflock import FITZ_LOCK
+    with FITZ_LOCK:
+        doc = fitz.open(path)
     try:
         if doc.needs_pass:
             raise RuntimeError("Bu PDF parola korumalı. Önce parolasını kaldırıp tekrar deneyin.")
         flags = getattr(fitz, "TEXTFLAGS_DICT", 0) & ~getattr(fitz, "TEXT_PRESERVE_IMAGES", 0)
         pages, sizes, ocr_needed, n = [], Counter(), [], len(doc)
-        for i, page in enumerate(doc):
+        for i in range(n):
             if cancel.is_set():
                 raise Cancelled()
-            d = page.get_text("dict", flags=flags) if flags else page.get_text("dict")
+            with FITZ_LOCK:          # PDF motoruna aynı anda tek iş parçacığı (bkz. pdflock.py)
+                page = doc[i]
+                d = page.get_text("dict", flags=flags) if flags else page.get_text("dict")
+                try:
+                    label = page.get_label() or str(i + 1)
+                except Exception:
+                    label = str(i + 1)
+                height = page.rect.height
             blocks, chars = [], 0
             for b in d.get("blocks", []):
                 if b.get("type", 0) != 0:
@@ -177,11 +186,7 @@ def extract_pdf(path, opts, progress, cancel):
                         sizes[round(sz, 1)] += k
                     lines.append(spans)
                 blocks.append({"lines": lines, "y0": b["bbox"][1]})
-            try:
-                label = page.get_label() or str(i + 1)
-            except Exception:
-                label = str(i + 1)
-            pages.append({"label": label, "blocks": blocks, "height": page.rect.height, "ocr": None})
+            pages.append({"label": label, "blocks": blocks, "height": height, "ocr": None})
             if chars < 25 and opts.get("ocr"):
                 ocr_needed.append(i)
             progress(int((i + 1) / max(1, n) * 30), f"Metin okunuyor: sayfa {i + 1} / {n}")
@@ -199,16 +204,18 @@ def extract_pdf(path, opts, progress, cancel):
                 if cancel.is_set():
                     raise Cancelled()
                 # Tesseract en iyi ~300 DPI gri tonlamalı görüntüde çalışır.
-                pix = doc[idx].get_pixmap(dpi=300, colorspace=fitz.csGRAY, alpha=False)
+                with FITZ_LOCK:
+                    png = doc[idx].get_pixmap(dpi=300, colorspace=fitz.csGRAY, alpha=False).tobytes("png")
                 try:
-                    txt = ocr_png(tess, pix.tobytes("png"), lang)
+                    txt = ocr_png(tess, png, lang)     # Tesseract ayrı bir program: kilit dışında
                 except Exception as e:
                     raise RuntimeError(f"OCR çalıştırılamadı (sayfa {idx + 1}).\nAyrıntı: {e}") from e
                 pages[idx]["ocr"] = [p for p in re.split(r"\n\s*\n", txt) if p.strip()]
                 progress(30 + int((j + 1) / len(ocr_needed) * 70),
                          f"OCR taranıyor: {j + 1} / {len(ocr_needed)} sayfa (belgenin {idx + 1}. sayfası)")
     finally:
-        doc.close()
+        with FITZ_LOCK:
+            doc.close()
 
     body = sizes.most_common(1)[0][0] if sizes else 0
     notes = bool(opts.get("skip_notes"))
