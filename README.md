@@ -121,6 +121,19 @@ packaging/
 
 ## Sürüm notları
 
+### 4.7.6
+- **Üst çubuk yan panelde:** kontrol paneli sağda ya da solda takılıyken Dosya Aç / Metni Düzenle / Belgeyi Kapat,
+  panel düğmeleri ve arama kutusu panelin üstüne alt alta yerleşir; metin alanı yukarıda bir satır kazanır. Panel
+  alttaysa, ayrı penceredeyse ya da kapalıysa çubuk eskisi gibi metnin üstündedir.
+- **Alıntılar ve Notlar** paneli artık sağda, kontrol panelinin altında açılır (önceki sürümlerden geçişte bir
+  kereliğine taşınır); açılınca kontrol paneli okuma düğmeleri kesilmeyecek kadar yer tutar. Üst çubuktaki düğmenin
+  adı da “Alıntılar ve Notlar” oldu.
+- **İlerleme çubuğu bilgisi seçilebilir:** Ayarlar › İlerleme Çubuğunda Göster › Cümle Sayısı / Yüzde / Sayfa; üçü
+  birlikte de gösterilebilir. Seçim salt okuma penceresinde de geçerlidir (dar pencerede bilgi alt satıra geçer).
+- “Cümle bitince otomatik devam et” yalnızca Ayarlar menüsünde (Ses ve Hız penceresindeki kopyası kaldırıldı).
+- Salt okuma penceresinde **Ctrl+T** sıradaki temaya geçer.
+- Düzeltme: daralan çubuklarda kısaltılmış (yalnızca simgeli) düğmeler, yer açıldığında bazen tam adlarına dönmüyordu.
+
 ### 4.7.5
 - **Salt okuma modu** (Görünüm › Salt Okuma Modu, Ctrl+Shift+R; metnin altındaki ▯ düğmesi): ana pencere gizlenir,
   yerine dikey kredi kartı büyüklüğünde, çerçevesiz, her zaman üstte kalabilen bir pencere açılır. Fare üzerinde

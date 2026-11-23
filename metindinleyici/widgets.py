@@ -339,7 +339,9 @@ class CompactTexts(QObject):
     def set_long_text(self, widget, text):
         """Uzun adı sonradan değiştirmek için (ör. düğmenin durumu değişince)."""
         self.items = [(w, text if w is widget else l, s) for w, l, s in self.items]
-        if not self.compact:
+        if self.compact:
+            widget.setText(next((s for w, l, s in self.items if w is widget), text))
+        else:
             widget.setText(text)
 
     def _fit_min(self):
@@ -352,9 +354,14 @@ class CompactTexts(QObject):
         lay = self.container.layout()
         if lay is None:
             return
-        if not self.compact:
-            self._need = lay.sizeHint().width() + self.slack   # uzun adlarla gereken genişlik (stil değişince yenilenir)
-        need = self._need or 0
+        # Uzun adlarla gereken genişlik: kısa adlar görünürken aradaki fark eklenerek her seferinde yeniden
+        # hesaplanır (önceden saklanan değer, yükleme sırasındaki uzun ilerleme yazısıyla şişip kalabiliyordu).
+        extra = 0
+        if self.compact:
+            for w, l, s in self.items:
+                fm = w.fontMetrics()
+                extra += max(0, fm.horizontalAdvance(l) - fm.horizontalAdvance(w.text()))
+        need = lay.sizeHint().width() + extra + self.slack
         width = self.container.width()
         compact = width < need
         if compact != self.compact:

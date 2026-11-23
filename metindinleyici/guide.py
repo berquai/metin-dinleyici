@@ -29,13 +29,20 @@ kaldığınız yer, alıntılarınız ve notlarınız belgeye bağlı olarak sak
 klasöre taşısanız da bu bilgi kaybolmaz; belgeler adına değil içeriğine göre tanınır.</p>
 <h3>Ekranın bölümleri</h3>
 <ul>
-<li><b>Solda</b>: Kütüphane, Orijinal Belge ve Alıntılar sekmeleri.</li>
+<li><b>Solda</b>: Kütüphane ve Orijinal Belge sekmeleri.</li>
 <li><b>Ortada</b>: okunan metin. Okunan cümle vurgulanır.</li>
-<li><b>Sağda</b>: Kontroller paneli (okuma düğmeleri, cümle numarası, bölüme git).</li>
+<li><b>Sağda</b>: en üstte belge düğmeleri (Aç, Düzenle, Kapat), panel düğmeleri ve arama kutusu; altında
+Kontroller paneli (okuma düğmeleri, cümle numarası, bölüme git); açıksa en altta <b>Alıntılar ve Notlar</b>.
+Kontrol paneli alttaysa, ayrı penceredeyse ya da kapalıysa belge ve panel düğmeleri ile arama kutusu metnin
+üstünde tek satırda durur.</li>
 <li><b>Metnin altında</b>: ilerleme çubuğu, <b>Okunan metni takip et</b>, <b>⌖ Okunan Yere Git</b>,
 <b>⧉ Cümleyi Kopyala</b> ve <b>▯ Salt Okuma</b>. Pencere daralınca bu düğmeler yalnızca simgeleriyle görünür;
 adları üzerine gelince çıkar.</li>
-<li><b>Ayarlar menüsü</b>: ses ve hız ile belge seçenekleri (seyrek değiştirildikleri için panelde yer kaplamazlar).</li>
+<li><b>Ayarlar menüsü</b>: ses ve hız, cümle bitince otomatik devam, ilerleme çubuğunda gösterilecek bilgiler
+ve belge seçenekleri (seyrek değiştirildikleri için panelde yer kaplamazlar).</li>
+<li><b>İlerleme çubuğu</b>: <b>Ayarlar › İlerleme Çubuğunda Göster</b> menüsünden <b>Cümle Sayısı</b>
+(“Cümle 16 / 529”), <b>Yüzde</b> (“%3”) ve <b>Sayfa</b> (“Sayfa 30 / 120”, sayfalı belgelerde) ayrı ayrı
+işaretlenir; üçü birden de gösterilebilir. Seçim salt okuma penceresinde de geçerlidir.</li>
 </ul>
 <p>Bütün paneller başlıklarından tutulup başka kenara sürüklenebilir, ayrı pencereye alınabilir ya da
 kapatılabilir. Kapattığınız paneli <b>Görünüm</b> menüsünden geri açarsınız.</p>
@@ -72,8 +79,7 @@ Ayarlar › Zaman ve dil › Konuşma bölümünden Türkçe ses paketi eklenebi
 <li><b>Hız</b>: %50–%200. Altında <b>dakikada okunan kelime</b> görünür; bu bir tahmin değil, o ses için okudukça
 ölçülen değerdir ve cümle arası esleri de içerir.</li>
 <li><b>Cümle arası es</b>: cümleler arasındaki sessizlik (yalnızca çevrimiçi seslerde).</li>
-<li><b>Cümle bitince otomatik devam et</b>: kapalıysa her cümlenin sonunda durur. Ayarlar menüsünden de
-açılıp kapanır.</li>
+<li><b>Cümle bitince otomatik devam et</b> (<b>Ayarlar</b> menüsünde): kapalıysa her cümlenin sonunda durur.</li>
 </ul>
 <p><b>Okuma › Okurken Uyku Modunu Engelle</b> açıkken (varsayılan) sesli okuma sürerken bilgisayar uyku moduna
 geçmez.</p>
@@ -108,12 +114,12 @@ Uzun okumalarda gözü yormamak için. <kbd>Esc</kbd> ile çıkılır.</p>
 altındaki <b>▯ Salt Okuma</b> düğmesi. Ana pencere gizlenir; yerine dikey kredi kartı büyüklüğünde, çerçevesiz bir
 pencere açılır. Fare üzerinde değilken bu pencerede <b>yalnızca metin ve okunan cümlenin vurgusu</b> görünür.</p>
 <ul>
-<li>Fareyle üzerine gelince: üstte ilerleme çubuğu ve yüzde ile sayfa (PDF'te “45 / 320. sayfa”, diğer belgelerde
-cümle) bilgisi; altta <b>◀</b> önceki cümle, <b>▶ / ⏸</b> oku–duraklat, <b>▶▶</b> sonraki cümle,
+<li>Fareyle üzerine gelince: üstte ilerleme çubuğu ve <b>Ayarlar › İlerleme Çubuğunda Göster</b>'de seçili
+bilgiler (cümle, yüzde, sayfa); altta <b>◀</b> önceki cümle, <b>▶ / ⏸</b> oku–duraklat, <b>▶▶</b> sonraki cümle,
 <b>Her zaman üstte</b> kutusu ve <b>⤢</b> ana görünüme dönüş.</li>
 <li><kbd>Boşluk</kbd>: fare pencerenin üzerindeyken (başka bir program etkin olsa da) ya da pencereye
 tıkladıktan sonra okumayı duraklatır / sürdürür. Pencere etkinken <kbd>←</kbd> / <kbd>→</kbd> cümle değiştirir,
-<kbd>Esc</kbd> ana görünüme döner.</li>
+<kbd>Esc</kbd> ana görünüme döner, <kbd>Ctrl+T</kbd> sıradaki temaya geçer.</li>
 <li>Kenarından ya da köşesinden sürükleyerek boyutlandırılır; metnin üzerinden sürükleyerek taşınır.
 <kbd>Ctrl+tekerlek</kbd> yalnızca bu penceredeki yazıyı büyütür / küçültür. Bir cümleye çift tıklamak okumayı oradan
 başlatır.</li>
@@ -123,7 +129,7 @@ başlatır.</li>
 <h3>Paneller</h3>
 <ul>
 <li>Üst çubuktaki düğmeler ya da kısayollar panelleri açıp kapatır: <b>Kütüphane</b> <kbd>Ctrl+L</kbd>,
-<b>Kaynak Göster / Kaynak Gizle</b> (belgenin özgün sayfaları) <kbd>F7</kbd>, <b>Alıntılar</b> <kbd>F8</kbd>,
+<b>Kaynak Göster / Kaynak Gizle</b> (belgenin özgün sayfaları) <kbd>F7</kbd>, <b>Alıntılar ve Notlar</b> <kbd>F8</kbd>,
 <b>Kontroller</b> <kbd>F9</kbd>. Belgenin adı pencerenin başlık çubuğunda yazar.</li>
 <li>Üst çubuk daralınca Dosya Aç, Metni Düzenle, Belgeyi Kapat ve Baştan düğmeleri yalnızca simgeleriyle (📂 ✎ ✕ ⇤)
 görünür.</li>
@@ -350,7 +356,7 @@ sözlüğü, ayarlar. Bunları seçerseniz bir kez daha onay istenir.</li>
 <tr><td><kbd>N</kbd></td><td>Not ekle</td></tr>
 <tr><td><kbd>H</kbd></td><td>Vurgula / vurguyu kaldır</td></tr>
 <tr><td><kbd>Shift+M</kbd></td><td>Son kaydın notunu ve etiketlerini düzenle</td></tr>
-<tr><td><kbd>F8</kbd></td><td>Alıntılar paneli</td></tr>
+<tr><td><kbd>F8</kbd></td><td>Alıntılar ve Notlar paneli</td></tr>
 <tr><td><kbd>Ctrl+Shift+X</kbd></td><td>Alıntıları dışa aktar</td></tr>
 <tr><th align="left" colspan="2">Dosya</th></tr>
 <tr><td><kbd>Ctrl+O</kbd></td><td>Dosya aç</td></tr>
@@ -385,6 +391,7 @@ sözlüğü, ayarlar. Bunları seçerseniz bir kez daha onay istenir.</li>
 <tr><td><kbd>Boşluk</kbd></td><td>Oku / Duraklat (fare üzerindeyken ya da pencere etkinken)</td></tr>
 <tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Önceki / sonraki cümle</td></tr>
 <tr><td><kbd>Esc</kbd></td><td>Ana görünüme dön</td></tr>
+<tr><td><kbd>Ctrl+T</kbd></td><td>Sonraki tema</td></tr>
 <tr><td><kbd>Ctrl+tekerlek</kbd></td><td>Yazıyı büyüt / küçült</td></tr>
 </table>
 <p>Tek harfli kısayollar (C, M, N, H) ve ← / → arama kutusunda ya da düzenleme modunda yazarken devreye girmez.</p>

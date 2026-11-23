@@ -32,6 +32,7 @@ class MiniReader(QWidget):
     prev_clicked = Signal()
     next_clicked = Signal()
     back_clicked = Signal()
+    theme_clicked = Signal()                  # Ctrl+T: sonraki tema
     sentence_activated = Signal(int)          # cümleye çift tıklandı: oradan oku
 
     def __init__(self, settings, icon=None):
@@ -76,6 +77,7 @@ class MiniReader(QWidget):
         self.bar.setRange(0, 1000)
         self.info = QLabel("")
         self.info.setAlignment(Qt.AlignCenter)
+        self.info.setWordWrap(True)              # cümle + yüzde + sayfa birlikte dar pencerede alt satıra geçsin
         tl.addWidget(self.bar)
         tl.addWidget(self.info)
 
@@ -215,7 +217,9 @@ class MiniReader(QWidget):
 
     def set_progress(self, frac, text):
         self.bar.setValue(int(round(max(0.0, min(1.0, frac)) * 1000)))
-        self.info.setText(text)
+        if text != self.info.text():
+            self.info.setText(text)
+            self._layout_bars()
 
     def set_playing(self, state):
         self.play_btn.setText({"playing": "⏸", "paused": "▶", "loading": "⏳", "idle": "▶"}.get(state, "▶"))
@@ -225,8 +229,9 @@ class MiniReader(QWidget):
     def _layout_bars(self):
         w = self.width()
         m = 6
-        self.top.adjustSize()
-        self.top.setGeometry(m, m, w - 2 * m, self.top.sizeHint().height())
+        lay = self.top.layout()
+        th = lay.heightForWidth(w - 2 * m) if lay is not None and lay.hasHeightForWidth() else -1
+        self.top.setGeometry(m, m, w - 2 * m, th if th > 0 else self.top.sizeHint().height())
         h = self.bottom.sizeHint().height()
         self.bottom.setGeometry(m, self.height() - h - m, w - 2 * m, h)
 
@@ -301,7 +306,9 @@ class MiniReader(QWidget):
 
     def keyPressEvent(self, e):
         k = e.key()
-        if k == Qt.Key_Space:
+        if k == Qt.Key_T and e.modifiers() & Qt.ControlModifier:
+            self.theme_clicked.emit()
+        elif k == Qt.Key_Space:
             self.play_clicked.emit()
         elif k == Qt.Key_Left:
             self.prev_clicked.emit()

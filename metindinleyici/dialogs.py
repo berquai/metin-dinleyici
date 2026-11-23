@@ -39,9 +39,9 @@ ABOUT_HTML = f"""
 <h2 style="margin-bottom:0">{APP_NAME}</h2>
 <p style="margin-top:2px">Sürüm {APP_VERSION} &nbsp;·&nbsp; {APP_YEAR}</p>
 <p>PDF, EPUB, DOCX ve TXT belgeleri için sesli okuma uygulaması.</p>
-<p><b>Bu sürümde:</b> salt okuma modu (başka işlerle uğraşırken metni takip etmek için küçük, her zaman üstte
-kalabilen pencere), yeni Ayarlar menüsü ve sadeleşen kontrol paneli, 19 renk teması, belge sonunda “baştan aransın
-mı?” sorusu, orijinal belgede tek tıkla sığdırma ve fareyle sürükleyerek gezinme.</p>
+<p><b>Bu sürümde:</b> kontrol paneli yandayken arama kutusu ve belge/panel düğmeleri panelin üstünde,
+Alıntılar ve Notlar kontrol panelinin altında; ilerleme çubuğunda cümle, yüzde ve sayfa bilgisi isteğe göre seçilir;
+salt okuma penceresinde Ctrl+T ile tema değişir.</p>
 <p>{APP_NAME}, <b>{AUTHOR}</b> tarafından kişisel bir proje olarak geliştirilmiştir
 ve <b>tamamen ücretsiz</b> olarak dağıtılmaktadır.</p>
 <p><b>Telif Hakkı © {APP_YEAR} {AUTHOR}.</b><br>
