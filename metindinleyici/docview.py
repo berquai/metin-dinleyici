@@ -188,6 +188,9 @@ class DocView(QWidget):
         self.zoom.activated.connect(lambda _: self.on_zoom_changed())
         bar.addWidget(self.zoom)
         tb("+", "Yakınlaştır (Ctrl+tekerlek)", lambda: self.step_zoom(1))
+        # Tek tıkla sığdırma (açılır listeyi açmadan)
+        self.fit_width_btn = tb("↔", "Genişliğe sığdır", lambda: self.set_zoom_mode("width"))
+        self.fit_page_btn = tb("↕", "Sayfaya sığdır (sayfanın tamamı görünür)", lambda: self.set_zoom_mode("page"))
         bar.addStretch(1)
         self.reading_btn = tb("⌖", "Okunan cümlenin sayfasına git", self.goto_reading)
         self.calib_btn = tb("⇆ Eşle", "Sayfa kalibrasyonu: panel yanlış sayfayı gösteriyorsa okunan metnin bulunduğu "
@@ -233,6 +236,8 @@ class DocView(QWidget):
         self.scroll.setWidget(self.page_label)
         self.scroll.viewport().installEventFilter(self)
         self.scroll.setFocusPolicy(Qt.StrongFocus)
+        self._drag = None                 # fareyle tutup sürükleme: (başlangıç noktası, yatay, dikey kaydırma)
+        self.page_label.setAttribute(Qt.WA_TransparentForMouseEvents)   # fare olayları görünüm alanına gitsin
         lay.addWidget(self.scroll, 1)
         self.info = QLabel("Belge açık değil.")
         self.info.setWordWrap(True)
@@ -437,6 +442,7 @@ class DocView(QWidget):
         self.page_label.setPixmap(QPixmap.fromImage(img))
         self.page_label.resize(int(w / r["dpr"]), int(h / r["dpr"]))
         self.info.hide()
+        QTimer.singleShot(0, self.update_pan_cursor)
 
     def update_controls(self):
         has = self.count > 0
@@ -452,6 +458,25 @@ class DocView(QWidget):
         self.page_spin.setToolTip(f"Belgedeki sayfa etiketi: {lab}" if lab and lab != str(self.index + 1) else "")
         self.reading_btn.setEnabled(has and self.reading_index is not None)
         self.calib_btn.setEnabled(has and bool(self.reading_label))
+
+    def set_zoom_mode(self, mode):
+        k = next((i for i, (_, v) in enumerate(ZOOMS) if v == mode), None)
+        if k is not None:
+            self.zoom.setCurrentIndex(k)
+            self.on_zoom_changed()
+
+    def can_pan(self):
+        h, v = self.scroll.horizontalScrollBar(), self.scroll.verticalScrollBar()
+        return h.maximum() > h.minimum() or v.maximum() > v.minimum()
+
+    def update_pan_cursor(self):
+        vp = self.scroll.viewport()
+        if self._drag is not None:
+            vp.setCursor(Qt.ClosedHandCursor)
+        elif self.can_pan():
+            vp.setCursor(Qt.OpenHandCursor)
+        else:
+            vp.unsetCursor()
 
     def on_zoom_changed(self):
         self.settings.setValue("doc_zoom", str(self.zoom.currentData()))
@@ -477,6 +502,26 @@ class DocView(QWidget):
             self.resize_timer.start()
 
     def eventFilter(self, obj, ev):
+        if obj is self.scroll.viewport():
+            t = ev.type()
+            # Yakınlaştırılmış sayfayı fareyle tutup sürükleyerek gezdirme (kaydırma çubuklarına gerek kalmadan)
+            if t == QEvent.MouseButtonPress and ev.button() == Qt.LeftButton and self.can_pan():
+                h, v = self.scroll.horizontalScrollBar(), self.scroll.verticalScrollBar()
+                self._drag = (ev.position().toPoint(), h.value(), v.value())
+                self.update_pan_cursor()
+                return True
+            if t == QEvent.MouseMove and self._drag is not None:
+                start, hv, vv = self._drag
+                d = ev.position().toPoint() - start
+                self.scroll.horizontalScrollBar().setValue(hv - d.x())
+                self.scroll.verticalScrollBar().setValue(vv - d.y())
+                return True
+            if t == QEvent.MouseButtonRelease and self._drag is not None:
+                self._drag = None
+                self.update_pan_cursor()
+                return True
+            if t == QEvent.Resize:
+                QTimer.singleShot(0, self.update_pan_cursor)
         if obj is self.scroll.viewport() and ev.type() == QEvent.Wheel:
             dy = ev.angleDelta().y()
             if ev.modifiers() & Qt.ControlModifier:

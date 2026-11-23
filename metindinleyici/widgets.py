@@ -1,7 +1,7 @@
 # Metin Dinleyici — Copyright (C) 2026 Berkay Çelik <berkcel@gmail.com>
 # SPDX-License-Identifier: AGPL-3.0-or-later  (ek koşullar için NOTICE dosyasına bakın)
 """Yardımcı arayüz bileşenleri: katlanabilir bölüm, kısalan etiket, tam ekran denetim çubuğu."""
-from PySide6.QtCore import QEvent, Qt, QTimer, Signal
+from PySide6.QtCore import QEvent, QObject, Qt, QTimer, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QBoxLayout, QFrame, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QToolButton, QVBoxLayout, QWidget,
@@ -320,3 +320,50 @@ class ThinProgress(QWidget):
         p.fillRect(self.rect(), self.track)
         p.fillRect(0, 0, int(self.width() * self.frac), self.height(), self.fill)
         p.end()
+
+
+class CompactTexts(QObject):
+    """Bir çubuktaki düğmelerin uzun adlarını yer daralınca kısa adlarla (simgeyle) değiştirir; uzun ad
+    ipucunda kalır. Düğmelerin en küçük genişliği kısa ada göre ayarlanır, böylece çubuk pencerenin en küçük
+    genişliğini büyütmez (dar ekranlarda kontrol paneli yanda kalabilsin diye)."""
+
+    def __init__(self, container, items, slack=0):
+        super().__init__(container)
+        self.slack = slack                    # uzun adlar için bırakılacak ek pay (ör. yanındaki ilerleme çubuğuna)
+        self.container = container
+        self.items = list(items)              # (düğme, uzun ad, kısa ad)
+        self.compact = False
+        self._need = None
+        container.installEventFilter(self)
+
+    def set_long_text(self, widget, text):
+        """Uzun adı sonradan değiştirmek için (ör. düğmenin durumu değişince)."""
+        self.items = [(w, text if w is widget else l, s) for w, l, s in self.items]
+        if not self.compact:
+            widget.setText(text)
+
+    def _fit_min(self):
+        for w, l, s in self.items:
+            fm = w.fontMetrics()
+            pad = max(16, w.sizeHint().width() - fm.horizontalAdvance(w.text()))
+            w.setMinimumWidth(fm.horizontalAdvance(s) + pad)
+
+    def update(self):
+        lay = self.container.layout()
+        if lay is None:
+            return
+        if not self.compact:
+            self._need = lay.sizeHint().width() + self.slack   # uzun adlarla gereken genişlik (stil değişince yenilenir)
+        need = self._need or 0
+        width = self.container.width()
+        compact = width < need
+        if compact != self.compact:
+            self.compact = compact
+            for w, l, s in self.items:
+                w.setText(s if compact else l)
+        self._fit_min()
+
+    def eventFilter(self, obj, ev):
+        if obj is self.container and ev.type() in (QEvent.Resize, QEvent.Show, QEvent.StyleChange):
+            QTimer.singleShot(0, self.update)
+        return False

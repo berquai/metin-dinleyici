@@ -38,14 +38,14 @@ from .extract import SUPPORTED, Cancelled, cleanup_stale_temp_dirs, load_documen
 from .paths import IS_WINDOWS, data_dir
 from .store import Store
 from .textproc import anchor_of, build_document, locate_anchor, parse_display, resolve_anchor, word_count
-from .themes import CUSTOM, DEFAULT_THEME, THEMES, palette_for
+from .themes import CUSTOM, DEFAULT_THEME, THEMES, is_dark, palette_for
 from .power import set_awake
 from .annotations import KIND_HIGHLIGHT, KIND_NOTE, KIND_QUOTE
 from .docview import DocView
 from .library import LibraryView
 from .library_info import human_size
 from .quotes import AnnotationDialog, QuotesView
-from .widgets import AdaptiveBox, CollapsibleSection, ElidedLabel, EmptyState, OverlayBar, ThinProgress
+from .widgets import AdaptiveBox, CompactTexts, EmptyState, OverlayBar, ThinProgress
 from .tts import (EDGE_VOICES, kill_all_processes, list_sapi_voices, safe_remove, sapi_rate,
                   synth_edge_chunk, synth_sapi)
 
@@ -56,7 +56,6 @@ LOOKAHEAD = 40                    # önbellekte tutulacak ileri cümle penceresi
 MAX_RECENT = 10                   # "Son Açılanlar" listesindeki en fazla dosya
 NARROW_WIDTH = 760                # dar pencere sınırının alt değeri (asıl sınır içeriğe göre hesaplanır)
 READING_COLUMN = 78               # tam ekran/odaklanmada satır başına yaklaşık karakter
-PLACEHOLDER_LABEL = ""
 
 
 @dataclass
@@ -221,18 +220,19 @@ class MainWindow(QMainWindow):
             b.setCheckable(True)
             b.setToolTip(tip)
             return b
-        self.lib_btn = panel_btn("Kütüphane Paneli", "Kütüphane panelini aç / kapat (Ctrl+L)")
-        self.doc_btn = panel_btn("Orijinal Belge Paneli", "Belgenin PDF/EPUB sayfalarını gösteren paneli aç / kapat (F7)")
-        self.quotes_btn = panel_btn("Alıntılar ve Notlar Paneli", "Alıntılar, notlar ve vurgular panelini aç / kapat (F8)")
-        self.panel_btn = panel_btn("Kontrol Paneli", "Okuma düğmeleri ile ses ve belge ayarlarının bulunduğu paneli "
-                                                     "aç / kapat (F9)")
+        # Kısa adlar: üst çubuk dar ekranda da sığsın (kontrol paneli yanda kalabilsin).
+        self.lib_btn = panel_btn("Kütüphane", "Kütüphane panelini aç / kapat (Ctrl+L)")
+        self.doc_btn = panel_btn("Kaynak Göster", "Belgenin özgün PDF/EPUB sayfalarını gösteren paneli aç / kapat (F7)")
+        self.quotes_btn = panel_btn("Alıntılar", "Alıntılar, notlar ve vurgular panelini aç / kapat (F8)")
+        self.panel_btn = panel_btn("Kontroller", "Okuma düğmelerinin bulunduğu kontrol panelini aç / kapat (F9)")
+        self.doc_btn.toggled.connect(
+            lambda on: self.doc_btn.setText("Kaynak Gizle" if on else "Kaynak Göster"))
 
         def separator():
             f = QFrame()
             f.setFrameShape(QFrame.VLine)
             f.setFrameShadow(QFrame.Sunken)
             return f
-        self.file_label = ElidedLabel(PLACEHOLDER_LABEL)
         self.search = QLineEdit()
         self.search.setPlaceholderText("Metinde ara (Enter: sonraki)")
         self.search.setToolTip("Enter veya F3: sonraki sonuç · Shift+Enter veya Shift+F3: önceki sonuç")
@@ -247,30 +247,27 @@ class MainWindow(QMainWindow):
         self.find_next_btn = QPushButton("▼")
         self.find_next_btn.setToolTip("Sonraki sonuç (F3)")
         self.find_next_btn.clicked.connect(self.find_next)
-        self.find_start_btn = QPushButton("⇤ Baştan Ara")
-        self.find_start_btn.setToolTip("Aranan ifadeyi metnin en başından itibaren ara (ilk geçtiği yer)")
+        self.find_start_btn = QPushButton("⇤ Baştan")
+        self.find_start_btn.setToolTip("Aranan ifadeyi metnin en başından itibaren ara (ilk geçtiği yer, Ctrl+Shift+F3)")
         self.find_start_btn.clicked.connect(self.find_from_start)
         self.search_count = QLabel("")
         self.search_count.setToolTip("Kaçıncı sonuçta olduğunuz / toplam sonuç")
-        self.theme_combo = QComboBox()
-        self.theme_combo.setToolTip("Renk teması")
-        self.theme_combo.addItems(list(THEMES) + [CUSTOM])
-        self.theme_combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
-        self.theme_combo.setMinimumContentsLength(4)
-        self.theme_combo.activated.connect(lambda i: self.set_theme(self.theme_combo.itemText(i)))
+        # Belge adı üst çubukta yazmaz: pencere başlığında zaten var. Tema seçimi Görünüm › Tema'da.
         top.addWidget(self.open_btn); top.addWidget(self.cancel_btn)
         top.addWidget(self.edit_btn); top.addWidget(self.close_doc_btn)
         top.addWidget(separator())
         for b in (self.lib_btn, self.doc_btn, self.quotes_btn, self.panel_btn):
             top.addWidget(b)
         top.addWidget(separator())
-        top.addWidget(self.file_label, 1)
-        top.addWidget(self.search, 1)
+        top.addStretch(1)
+        top.addWidget(self.search, 3)
         for b in (self.find_prev_btn, self.find_next_btn, self.find_start_btn):
             top.addWidget(b)
         top.addWidget(self.search_count)
-        top.addWidget(self.theme_combo)
         root.addWidget(self.top_bar)
+        self.top_compact = CompactTexts(self.top_bar, [
+            (self.open_btn, "📂 Dosya Aç", "📂"), (self.edit_btn, "✎ Metni Düzenle", "✎"),
+            (self.close_doc_btn, "✕ Belgeyi Kapat", "✕"), (self.find_start_btn, "⇤ Baştan", "⇤")])
 
         # ── okuma alanı (tam ekran ve odaklanma modunda ortalanmış sütun olur) ──
         self.reader = QWidget()
@@ -289,6 +286,7 @@ class MainWindow(QMainWindow):
         rl.addWidget(self.text, 1)
         self.progress = QProgressBar()
         self.progress.setRange(0, 1); self.progress.setValue(0)
+        self.progress.setMinimumWidth(60)
         self.progress.setFormat("")
         self.progress.setTextVisible(True)
         self.progress.setAlignment(Qt.AlignCenter)
@@ -303,18 +301,42 @@ class MainWindow(QMainWindow):
         self.stop_load_btn.clicked.connect(self.cancel_load)
         self.stop_load_btn.hide()
         pb.addWidget(self.stop_load_btn)
+        # Metnin sağ altında, okurken sık kullanılanlar: takip, okunan yere dön, cümleyi kopyala.
+        self.follow_check = QCheckBox("Okunan metni takip et")
+        self.follow_check.setChecked(True)
+        self.follow_check.setFocusPolicy(Qt.NoFocus)
+        self.follow_check.setToolTip("Açıkken metin, okunan cümleyi görünür tutacak şekilde kayar (Ctrl+Shift+F).\n"
+                                     "Okuma sırasında metni elle kaydırırsanız takip kendiliğinden kapanır;\n"
+                                     "kutuyu yeniden işaretlediğinizde okunan yere dönülür.")
+        self.follow_check.toggled.connect(self.on_follow_toggled)
+        self.goto_current_btn = QPushButton("⌖ Okunan Yere Git")
+        self.goto_current_btn.setToolTip("Metni okunan cümleye kaydırır (Ctrl+J)")
+        self.goto_current_btn.clicked.connect(lambda: self.reveal_current())
+        self.copy_btn = QPushButton("⧉ Cümleyi Kopyala")
+        self.copy_btn.setToolTip("Okunan cümleyi panoya kopyalar (C)")
+        self.copy_btn.clicked.connect(self.copy_sentence)
+        self.mini_btn = QPushButton("▯ Salt Okuma")
+        self.mini_btn.setToolTip("Küçük, her zaman üstte kalabilen salt okuma penceresine geç (Ctrl+Shift+R)")
+        self.mini_btn.clicked.connect(lambda: self.enter_mini_mode())
+        pb.addSpacing(6)
+        pb.addWidget(self.follow_check)
+        for b in (self.goto_current_btn, self.copy_btn, self.mini_btn):
+            pb.addWidget(b)
         self.progress_row = QWidget()
         self.progress_row.setLayout(pb)
+        self.bottom_compact = CompactTexts(self.progress_row, [
+            (self.follow_check, "Okunan metni takip et", "Takip"), (self.goto_current_btn, "⌖ Okunan Yere Git", "⌖"),
+            (self.copy_btn, "⧉ Cümleyi Kopyala", "⧉"), (self.mini_btn, "▯ Salt Okuma", "▯")], slack=140)
         pb.setContentsMargins(0, 0, 0, 0)
         rl.addWidget(self.progress_row)
         root.addWidget(self.reader, 1)
         self.setCentralWidget(central)
 
         self.overlay = OverlayBar(self.reader)
-        self.overlay.prev_clicked.connect(lambda: self.jump_to(self.current_index - 1))
+        self.overlay.prev_clicked.connect(lambda: self.step(-1))
         self.overlay.restart_clicked.connect(self.restart_sentence)
         self.overlay.play_clicked.connect(self.toggle_play)
-        self.overlay.next_clicked.connect(lambda: self.jump_to(self.current_index + 1))
+        self.overlay.next_clicked.connect(lambda: self.step(1))
         self.overlay.exit_clicked.connect(self.exit_immersive)
         self.toast = QLabel(self.reader)
         self.toast.setObjectName("toast")
@@ -336,7 +358,8 @@ class MainWindow(QMainWindow):
         # Oku/Duraklat alt satırda geniş düğme; Cümleyi Baştan Oku üst satırda ortada.
         r = QHBoxLayout()
         self.prev_btn = QPushButton("◀ Önceki")
-        self.restart_btn = QPushButton("↺ Cümleyi Baştan Oku")
+        self.restart_btn = QPushButton("↺ Baştan Oku")
+        self.restart_btn.setToolTip("Okunan cümleyi baştan oku (Ctrl+R)")
         self.next_btn = QPushButton("Sonraki ▶")
         r.addWidget(self.prev_btn); r.addWidget(self.restart_btn, 1); r.addWidget(self.next_btn); g.addLayout(r)
         r = QHBoxLayout()
@@ -353,8 +376,8 @@ class MainWindow(QMainWindow):
         bigger.setBold(True)
         self.read_btn.setFont(bigger)
         self.read_btn.setMinimumHeight(54)
-        self.prev_btn.clicked.connect(lambda: self.jump_to(self.current_index - 1))
-        self.next_btn.clicked.connect(lambda: self.jump_to(self.current_index + 1))
+        self.prev_btn.clicked.connect(lambda: self.step(-1))
+        self.next_btn.clicked.connect(lambda: self.step(1))
         self.read_btn.clicked.connect(self.toggle_play)
         self.restart_btn.clicked.connect(self.restart_sentence)
         self.stop_btn.clicked.connect(self.stop_playback)
@@ -379,21 +402,15 @@ class MainWindow(QMainWindow):
         g.addLayout(form2)
         self.where = QLabel("")
         self.where.setStyleSheet("font-weight:600")
+        self.where.setWordWrap(True)
         g.addWidget(self.where)
-        self.current = QLabel("Okunacak cümle burada görünecek.")
-        self.current.setWordWrap(True); self.current.setMinimumHeight(90); self.current.setAlignment(Qt.AlignTop)
-        self.current.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        g.addWidget(self.current, 1)
-        cr = QHBoxLayout(); cr.addStretch(1)
-        self.copy_btn = QPushButton("Kopyala")
-        self.copy_btn.setToolTip("Okunan cümleyi panoya kopyalar (C)")
-        self.copy_btn.clicked.connect(self.copy_sentence)
-        cr.addWidget(self.copy_btn)
-        g.addLayout(cr)
+        # Okunan cümle metinde zaten vurgulu: panelde ayrıca gösterilmez (kopyalama düğmesi metnin altında).
 
-        # 2. sütun: ses ayarları (katlanabilir)
-        self.sec_voice = CollapsibleSection("Ses ve Hız")
-        v = self.sec_voice.body_layout
+        # Ses ve hız ile belge seçenekleri panelde değil, Ayarlar menüsünde (seyrek kullanılır, yer kaplamasın).
+        self.voice_dlg = QDialog(self)
+        self.voice_dlg.setWindowTitle("Ses ve Hız")
+        self.voice_dlg.setMinimumWidth(420)
+        v = QVBoxLayout(self.voice_dlg)
         r = QHBoxLayout(); r.addWidget(QLabel("Ses modu"))
         self.mode = QComboBox()
         self.mode.addItems(["Çevrimiçi (Edge sinir ağı sesleri)", "Çevrimdışı (Windows sesleri)"])
@@ -431,39 +448,13 @@ class MainWindow(QMainWindow):
         self.auto_check = QCheckBox("Cümle bitince otomatik devam et")
         self.auto_check.setChecked(True)
         v.addWidget(self.auto_check)
-        fr = QHBoxLayout()
-        self.follow_check = QCheckBox("Okunan metni takip et")
-        self.follow_check.setChecked(True)
-        self.follow_check.setToolTip("Açıkken metin, okunan cümleyi görünür tutacak şekilde kayar.\n"
-                                     "Okuma sırasında metni elle kaydırırsanız takip kendiliğinden kapanır;\n"
-                                     "kutuyu yeniden işaretlediğinizde okunan yere dönülür.")
-        self.follow_check.toggled.connect(self.on_follow_toggled)
-        self.goto_current_btn = QPushButton("Okunan yere git")
-        self.goto_current_btn.clicked.connect(lambda: self.reveal_current())
-        fr.addWidget(self.follow_check); fr.addStretch(1); fr.addWidget(self.goto_current_btn)
-        v.addLayout(fr)
-
-        # 3. sütun: belge seçenekleri (katlanabilir)
-        self.sec_doc = CollapsibleSection("Belge Seçenekleri")
-        o = self.sec_doc.body_layout
-        self.ocr = QCheckBox("Taranmış sayfalar için OCR")
-        self.skip_notes = QCheckBox("Dipnotları ve dipnot numaralarını atla")
-        self.strip_headers = QCheckBox("Üst/alt bilgi ve sayfa numaralarını temizle")
-        for c in (self.ocr, self.skip_notes, self.strip_headers):
-            c.setChecked(True); o.addWidget(c)
-        hint = QLabel("Seçenek değişikliği için belgeyi yeniden yükleyin (F5).")
-        hint.setWordWrap(True); o.addWidget(hint)
-
-        settings_col = QWidget()
-        sc = QVBoxLayout(settings_col)
-        sc.setContentsMargins(0, 0, 0, 0)
-        sc.addWidget(self.sec_voice)
-        sc.addWidget(self.sec_doc)
-        sc.addStretch(1)
+        bb = QDialogButtonBox(QDialogButtonBox.Close)
+        bb.button(QDialogButtonBox.Close).setText("Kapat")
+        bb.rejected.connect(self.voice_dlg.close)
+        v.addWidget(bb)
 
         self.panel_box = AdaptiveBox(threshold=820)
-        self.panel_box.add_column(reading, 3)
-        self.panel_box.add_column(settings_col, 2)
+        self.panel_box.add_column(reading, 1)
         panel = QWidget()
         pl = QVBoxLayout(panel)
         pl.setContentsMargins(10, 6, 10, 6)
@@ -490,10 +481,9 @@ class MainWindow(QMainWindow):
 
         for b in (self.prev_btn, self.read_btn, self.next_btn, self.restart_btn, self.stop_btn, self.copy_btn,
                   self.open_btn, self.close_doc_btn, self.edit_btn, self.cancel_btn, self.goto_current_btn,
-                  self.lib_btn, self.doc_btn, self.quotes_btn, self.panel_btn,
+                  self.lib_btn, self.doc_btn, self.quotes_btn, self.panel_btn, self.mini_btn,
                   self.find_prev_btn, self.find_next_btn, self.find_start_btn):
             b.setFocusPolicy(Qt.NoFocus)          # Boşluk tuşu odaklı düğmeye değil, Oku/Duraklat'a gitsin
-        self.theme_combo.setFocusPolicy(Qt.NoFocus)
 
         credit = QLabel(f'© {APP_YEAR} {AUTHOR} · <a href="mailto:{AUTHOR_MAIL}">{AUTHOR_MAIL}</a>')
         credit.setOpenExternalLinks(True)
@@ -556,9 +546,9 @@ class MainWindow(QMainWindow):
         act(m, "Oku / Duraklat", self.toggle_play, "Space")
         act(m, "Durdur  ·  tam ekranda: Çık", self.on_escape, "Esc")
         m.addSeparator()
-        act(m, "Önceki Cümle  (← de olur)", lambda: self.jump_to(self.current_index - 1), "Ctrl+Left",
+        act(m, "Önceki Cümle  (← de olur)", lambda: self.step(-1), "Ctrl+Left",
             tip="Metin alanındayken yalnızca ← tuşu da önceki cümleye geçer")
-        act(m, "Sonraki Cümle  (→ de olur)", lambda: self.jump_to(self.current_index + 1), "Ctrl+Right",
+        act(m, "Sonraki Cümle  (→ de olur)", lambda: self.step(1), "Ctrl+Right",
             tip="Metin alanındayken yalnızca → tuşu da sonraki cümleye geçer")
         act(m, "Cümleyi Baştan Oku", self.restart_sentence, "Ctrl+R")
         m.addSeparator()
@@ -608,13 +598,16 @@ class MainWindow(QMainWindow):
         m.setToolTipsVisible(True)
         self.fullscreen_act = act(m, "Tam Ekran", lambda on: self.set_fullscreen(on), "F11", checkable=True)
         self.focus_act = act(m, "Odaklanma Modu", lambda on: self.set_focus_mode(on), "F12", checkable=True)
+        act(m, "Salt Okuma Modu (küçük pencere)", lambda: self.enter_mini_mode(), "Ctrl+Shift+R",
+            tip="Ana pencere gizlenir; yalnızca metnin ve okunan cümlenin göründüğü, her zaman üstte kalabilen "
+                "küçük bir pencere açılır")
         m.addSeparator()
-        self.lib_act = act(m, "Kütüphane Paneli", lambda on: self.show_library(on), "Ctrl+L", checkable=True)
-        self.doc_act = act(m, "Orijinal Belge Paneli", lambda on: self.show_docview(on), "F7", checkable=True)
-        self.quotes_act = act(m, "Alıntılar ve Notlar Paneli", lambda on: self.toggle_quotes(on), checkable=True)
+        self.lib_act = act(m, "Kütüphane", lambda on: self.show_library(on), "Ctrl+L", checkable=True)
+        self.doc_act = act(m, "Kaynak Belge (özgün sayfalar)", lambda on: self.show_docview(on), "F7", checkable=True)
+        self.quotes_act = act(m, "Alıntılar ve Notlar", lambda on: self.toggle_quotes(on), checkable=True)
         self.quotes_act.setShortcut(QKeySequence())          # F8 Alıntılar menüsünde
         pa = self.dock.toggleViewAction()
-        pa.setText("Kontrol Paneli")
+        pa.setText("Kontroller")
         pa.setShortcut(QKeySequence("F9"))
         m.addAction(pa); self.addAction(pa)
         lm = m.addMenu("Panel Yerleşimi")
@@ -642,7 +635,12 @@ class MainWindow(QMainWindow):
         tm = m.addMenu("Tema")
         self.theme_group = QActionGroup(self)
         self.theme_actions = {}
+        prev_dark = None
         for name in list(THEMES) + [CUSTOM]:
+            dark = is_dark(THEMES[name]["base"]) if name in THEMES else None
+            if prev_dark is not None and dark != prev_dark:
+                tm.addSeparator()                   # açık temalar | koyu temalar | özel
+            prev_dark = dark
             a = act(tm, name, lambda _=False, n=name: self.set_theme(n), checkable=True)
             self.theme_group.addAction(a)
             self.theme_actions[name] = a
@@ -651,6 +649,32 @@ class MainWindow(QMainWindow):
         act(m, "Sonraki Tema", self.next_theme, "Ctrl+T")
         m.addSeparator()
         self.on_top_act = act(m, "Her Zaman Üstte", self.set_on_top, "Ctrl+Shift+A", checkable=True)
+
+        # Ayarlar: seyrek değiştirilen ses ve belge seçenekleri (önceden kontrol panelinde yer kaplıyordu)
+        m = self.menuBar().addMenu("Ayarlar")
+        m.setToolTipsVisible(True)
+        act(m, "Ses ve Hız…", self.show_voice_settings, "Ctrl+Shift+S",
+            tip="Ses modu, ses, okuma hızı, cümle arası es, cümle bitince otomatik devam")
+        self.auto_act = act(m, "Cümle Bitince Otomatik Devam Et", lambda on: self.auto_check.setChecked(on),
+                            checkable=True)
+        self.auto_check.toggled.connect(lambda on: (self.auto_act.blockSignals(True), self.auto_act.setChecked(on),
+                                                    self.auto_act.blockSignals(False)))
+        m.addSeparator()
+        dm = m.addMenu("Belge Seçenekleri")
+        dm.setToolTipsVisible(True)
+        tip = "Değişikliğin uygulanması için belgeyi yeniden yükleyin (F5)"
+        self.ocr = act(dm, "Taranmış Sayfalar İçin OCR", lambda _: self.on_doc_option(), checkable=True, tip=tip)
+        self.skip_notes = act(dm, "Dipnotları ve Dipnot Numaralarını Atla", lambda _: self.on_doc_option(),
+                              checkable=True, tip=tip)
+        self.strip_headers = act(dm, "Üst/Alt Bilgi ve Sayfa Numaralarını Temizle", lambda _: self.on_doc_option(),
+                                 checkable=True, tip=tip)
+        for a in (self.ocr, self.skip_notes, self.strip_headers):
+            a.setChecked(True)
+        dm.addSeparator()
+        act(dm, "Seçeneklerle Yeniden Yükle", self.reload)
+        m.addSeparator()
+        m.addAction(self.awake_act)
+        m.addAction(self.circumflex_act)
 
         m = self.menuBar().addMenu("Yardım")
         act(m, "Kullanım Kılavuzu", self.show_guide, "F1")
@@ -673,6 +697,15 @@ class MainWindow(QMainWindow):
 
     def show_about(self):
         AboutDialog(self, QApplication.instance().windowIcon()).exec()
+
+    def show_voice_settings(self):
+        """Ayarlar › Ses ve Hız: pencere kipsizdir; açıkken okumaya ve metinde gezinmeye devam edilebilir."""
+        d = self.voice_dlg
+        d.show(); d.raise_(); d.activateWindow()
+
+    def on_doc_option(self):
+        if self.sentences:
+            self.statusBar().showMessage("Belge seçeneği değişti; uygulamak için belgeyi yeniden yükleyin (F5).", 6000)
 
     # ───────────────────────── ayarlar ─────────────────────────
     def restore_settings(self):
@@ -705,8 +738,6 @@ class MainWindow(QMainWindow):
             # kütüphane açık ve dört kapak genişliğinde.
             s.setValue("layout_v46", True)
             self.apply_default_layout(keep_open=True)
-        self.sec_voice.set_expanded(s.value("sec_voice", True, type=bool))
-        self.sec_doc.set_expanded(s.value("sec_doc", True, type=bool))
         self.awake_act.setChecked(s.value("keep_awake", True, type=bool))
         self.thin_act.setChecked(s.value("thin_progress", True, type=bool))
         ap = self.appearance
@@ -721,6 +752,13 @@ class MainWindow(QMainWindow):
         self.pause.setValue(s.value("pause", 45, type=int))
         self.on_pause_changed(self.pause.value())
         self.auto_check.setChecked(s.value("auto", True, type=bool))
+        self.auto_act.setChecked(self.auto_check.isChecked())
+        try:
+            g = s.value("voice_dlg_geometry")
+            if g is not None:
+                self.voice_dlg.restoreGeometry(g)
+        except Exception:
+            pass
         self.follow_check.setChecked(s.value("follow", True, type=bool))
         self.follow_act.setChecked(self.follow_check.isChecked())
         self.ocr.setChecked(s.value("ocr", True, type=bool))
@@ -760,8 +798,6 @@ class MainWindow(QMainWindow):
         if self.dock_ratio:
             s.setValue("dock_ratio", round(self.dock_ratio, 4))
         s.setValue("dock_area", int(self.user_dock_area.value))
-        s.setValue("sec_voice", self.sec_voice.is_expanded())
-        s.setValue("sec_doc", self.sec_doc.is_expanded())
         s.setValue("keep_awake", self.awake_act.isChecked())
         s.setValue("thin_progress", self.thin_act.isChecked())
         ap = self.appearance
@@ -780,7 +816,11 @@ class MainWindow(QMainWindow):
         s.setValue("custom_theme", json.dumps(self.custom_theme))
         s.setValue("on_top", self.on_top_act.isChecked())
         s.setValue("wpm", json.dumps(self.wpm))
+        s.setValue("voice_dlg_geometry", self.voice_dlg.saveGeometry())
+        if getattr(self, "mini", None) is not None:
+            self.mini.save_state(s)
         s.remove("dark")
+        s.remove("sec_voice"); s.remove("sec_doc")       # 4.7.4'e kadar kontrol panelindeki katlanır bölümler
 
     def recent_files(self):
         v = self.settings.value("recent", [])
@@ -829,10 +869,11 @@ class MainWindow(QMainWindow):
                            "QGroupBox{font-weight:600; margin-top:14px; padding-top:6px}"
                            "QGroupBox::title{subcontrol-origin:margin; left:8px}"
                            "QProgressBar{min-height:20px}")
-        self.theme_combo.setCurrentIndex(max(0, self.theme_combo.findText(self.theme_name)))
         if self.theme_name in self.theme_actions:
             self.theme_actions[self.theme_name].setChecked(True)
         self.overlay.apply_colors(self.colors)
+        if getattr(self, "mini", None) is not None:
+            self.mini.apply_colors(self.colors)
         if hasattr(self, "thin_progress"):
             self.thin_progress.set_colors(self.colors)
         # Stil sayfası düğme boşluklarını değiştirir: panelin en küçük genişliğini yeniden hesapla
@@ -928,6 +969,7 @@ class MainWindow(QMainWindow):
         self.dock.setFloating(False)
         self.addDockWidget(area, self.dock)
         self.user_dock_area = area
+        self.remember_user_side(area)
         self.size_dock(area)
         self.adapt_to_width()
 
@@ -962,6 +1004,13 @@ class MainWindow(QMainWindow):
         if not self._auto_moving and area != Qt.NoDockWidgetArea:
             self.user_dock_area = area       # kullanıcı sürükleyerek taşıdı
             self._auto_moved = False
+            self.remember_user_side(area)
+
+    def remember_user_side(self, area):
+        """Kullanıcı paneli dar pencerede bilerek yana aldıysa, pencere bu genişlikten daralmadıkça panel
+        kendiliğinden alta indirilmez (önceden indiriliyordu: küçük ekranlarda panel yana alınamıyordu)."""
+        self._user_side_width = (self.width() if area in (Qt.LeftDockWidgetArea, Qt.RightDockWidgetArea)
+                                 else None)
 
     def showEvent(self, e):
         super().showEvent(e)
@@ -1157,6 +1206,9 @@ class MainWindow(QMainWindow):
             if scr is not None:
                 width = max(width, scr.availableGeometry().width())
         narrow = width < (limit + 40 if self._auto_moved else limit)
+        chosen = getattr(self, "_user_side_width", None)
+        if narrow and not self._auto_moved and chosen is not None and width >= chosen - 20:
+            narrow = False                   # kullanıcı bu genişlikte paneli bilerek yana aldı
         side = self.user_dock_area in (Qt.LeftDockWidgetArea, Qt.RightDockWidgetArea)
         cur = self.dockWidgetArea(self.dock)
         target = None
@@ -1169,7 +1221,68 @@ class MainWindow(QMainWindow):
             self.addDockWidget(target, self.dock)
             self._auto_moving = False
             self.size_dock(target)
-        self.theme_combo.setVisible(self.width() >= 640)     # dar pencerede tema menüden seçilir
+
+    # ───────────────────────── salt okuma (küçük pencere) ─────────────────────────
+    def enter_mini_mode(self):
+        if not self.sentences:
+            QMessageBox.information(self, "Salt okuma", "Önce bir belge açın.")
+            return
+        if self.editing and not self.cancel_edit_mode():
+            return
+        if self.immersive():
+            self.exit_immersive()
+        if getattr(self, "mini", None) is None:
+            from .minireader import MiniReader
+            m = self.mini = MiniReader(self.settings, QApplication.instance().windowIcon())
+            m.play_clicked.connect(self.toggle_play)
+            m.prev_clicked.connect(lambda: self.step(-1))
+            m.next_clicked.connect(lambda: self.step(1))
+            m.back_clicked.connect(self.exit_mini_mode)
+            m.sentence_activated.connect(lambda i: self.jump_to(i, play=True))
+        m = self.mini
+        m.apply_colors(self.colors)
+        m.set_document(self.text.toPlainText(), self.sentences, self.appearance)
+        self._mini_was_maximized = self.isMaximized()
+        m.set_playing(self.state)
+        self.hide()
+        m.show()
+        m.raise_()
+        self.update_mini()
+        QTimer.singleShot(0, m.scroll_to_current)
+
+    def exit_mini_mode(self):
+        m = getattr(self, "mini", None)
+        if m is None or not m.isVisible():
+            return
+        m.save_state(self.settings)
+        m.hide()
+        if getattr(self, "_mini_was_maximized", False):
+            self.showMaximized()
+        else:
+            self.showNormal()
+        self.raise_()
+        self.activateWindow()
+        if self.sentences:
+            QTimer.singleShot(60, self.reveal_current)
+
+    def mini_active(self):
+        m = getattr(self, "mini", None)
+        return m is not None and m.isVisible()
+
+    def update_mini(self):
+        if not self.mini_active() or not self.sentences:
+            return
+        n, i = len(self.sentences), self.current_index
+        self.mini.set_current(i)
+        frac = (i + 1) / n
+        s = self.sentences[i]
+        label = self.toc[s.section][0] if s.section < len(self.toc) else ""
+        last = next((l for l, _ in reversed(self.toc) if l.startswith("Sayfa ")), "")
+        if label.startswith("Sayfa ") and last[6:].isdigit():
+            info = f"%{frac * 100:.0f}  ·  {label[6:]} / {last[6:]}. sayfa"
+        else:
+            info = f"%{frac * 100:.0f}  ·  cümle {i + 1} / {n}"
+        self.mini.set_progress(frac, info)
 
     # ───────────────────────── tam ekran ve odaklanma ─────────────────────────
     def immersive(self):
@@ -1386,6 +1499,7 @@ class MainWindow(QMainWindow):
             on = dock.toggleViewAction().isChecked()
             for w in widgets:
                 w.blockSignals(True); w.setChecked(on); w.blockSignals(False)
+        self.doc_btn.setText("Kaynak Gizle" if self.doc_btn.isChecked() else "Kaynak Göster")
 
     def on_doc_visibility(self, visible):
         self.sync_panel_buttons()
@@ -1563,7 +1677,6 @@ class MainWindow(QMainWindow):
         old = None
         if doc_id == self.doc_id:
             old, self.doc_path = self.doc_path, new_path
-            self.file_label.setText(Path(new_path).name)
             self.setWindowTitle(f"{Path(new_path).name} — {APP_NAME}")
         rec = self.recent_files()
         if old:
@@ -2231,7 +2344,7 @@ class MainWindow(QMainWindow):
         self.open_btn.setEnabled(False)
         self.stop_load_btn.setText("■ Yüklemeyi Durdur")
         self.stop_load_btn.show()
-        self.file_label.setText("Yükleniyor: " + Path(path).name)
+        self.statusBar().showMessage("Yükleniyor: " + Path(path).name)
         self.empty.hide()
         self.on_load_progress(0)
         opts = {"ocr": self.ocr.isChecked(), "skip_notes": self.skip_notes.isChecked(),
@@ -2254,7 +2367,7 @@ class MainWindow(QMainWindow):
     def cancel_load(self):
         if self.load_cancel and self.loading:
             self.load_cancel.set()
-            self.file_label.setText("Durduruluyor…")
+            self.statusBar().showMessage("Durduruluyor…")
             self.stop_load_btn.setEnabled(False)
             # OCR o anda taradığı sayfayı bitirince durur (birkaç saniye sürebilir).
             self.progress.setFormat("Durduruluyor, o anki sayfa bitiriliyor…")
@@ -2280,7 +2393,7 @@ class MainWindow(QMainWindow):
         if self.closing:
             return
         if r.get("cancelled") or "error" in r:
-            self.file_label.setText(Path(self.doc_path).name if self.doc_path else "Dosya açılamadı")
+            self.statusBar().clearMessage()
             self.update_progress()
             self.update_empty_state()
             if r.get("cancelled"):
@@ -2310,7 +2423,6 @@ class MainWindow(QMainWindow):
             self.show_document(sections, row["position"], row["position_anchor"])
         else:
             self.show_document(sections, self.legacy_position(path))
-        self.file_label.setText(Path(path).name)
         self.setWindowTitle(f"{Path(path).name} — {APP_NAME}")
         self.close_doc_btn.setEnabled(True)
         self.close_doc_act.setEnabled(True)
@@ -2396,8 +2508,6 @@ class MainWindow(QMainWindow):
         self.index.blockSignals(True); self.index.setRange(0, 0); self.index.blockSignals(False)
         self.total.setText("/ 0")
         self.where.setText("")
-        self.current.setText("Okunacak cümle burada görünecek.")
-        self.file_label.setText(PLACEHOLDER_LABEL)
         self.setWindowTitle(APP_NAME)
         self.close_doc_btn.setEnabled(False)
         self.close_doc_act.setEnabled(False)
@@ -2431,7 +2541,8 @@ class MainWindow(QMainWindow):
         self.progress.setRange(0, max(1, n))
         self.progress.setValue(self.current_index + 1 if n else 0)
         # QProgressBar biçiminde %v = değer, %m = en büyük değer, %p = yüzde
-        self.progress.setFormat("Cümle %v / %m  ·  %p%" if n else "")
+        self.progress.setFormat("%v / %m  ·  %p%" if n else "")
+        self.progress.setToolTip(f"Cümle {self.current_index + 1} / {n}" if n else "")
         if hasattr(self, "thin_progress"):
             self.thin_progress.set_fraction((self.current_index + 1) / n if n else 0)
 
@@ -2440,7 +2551,6 @@ class MainWindow(QMainWindow):
             return
         i = self.current_index
         s = self.sentences[i]
-        self.current.setText(s.text)
         self.index.blockSignals(True); self.index.setValue(i + 1); self.index.blockSignals(False)
         self.update_progress()
         self.where.setText(self.toc[s.section][0] if s.section < len(self.toc) else "")
@@ -2449,6 +2559,7 @@ class MainWindow(QMainWindow):
         if ci >= 0:
             self.section_combo.setCurrentIndex(ci)
         self.highlight(scroll=self.follow_check.isChecked() if scroll is None else scroll)
+        self.update_mini()
         if self.doc_id:
             self.pos_timer.start()
 
@@ -2486,8 +2597,14 @@ class MainWindow(QMainWindow):
             self.scroll_anim.setEndValue(target)
             self.scroll_anim.start()
             return
-        if force or rect.top() < vp * 0.12 or rect.bottom() > vp * 0.82:
-            sb.setValue(sb.value() + rect.top() - int(vp * 0.3))
+        # Cümlenin yalnızca başına değil sonuna da bakılır: uzun cümlenin sonu görünmeyen alanda kalmasın.
+        e = QTextCursor(self.text.document())
+        e.setPosition(s.end)
+        bottom = self.text.cursorRect(e).bottom()
+        if force or rect.top() < vp * 0.08 or bottom > vp * 0.92:
+            height = bottom - rect.top()
+            lead = int(vp * 0.3) if height < vp * 0.6 else max(8, int(vp * 0.05))
+            sb.setValue(sb.value() + rect.top() - lead)
 
     def reveal_current(self):
         if self.sentences:
@@ -2566,7 +2683,7 @@ class MainWindow(QMainWindow):
             return False
         if ev.modifiers() & (Qt.ControlModifier | Qt.ShiftModifier | Qt.AltModifier | Qt.MetaModifier):
             return False
-        self.jump_to(self.current_index + (1 if ev.key() == Qt.Key_Right else -1))
+        self.step(1 if ev.key() == Qt.Key_Right else -1)
         return True
 
     def keyPressEvent(self, ev):
@@ -2597,20 +2714,37 @@ class MainWindow(QMainWindow):
         elif forward:
             c = doc.find(q, self.sentences[self.current_index].end)
             if c.isNull():
+                if doc.find(q, 0).isNull():
+                    self.statusBar().showMessage(f"“{q}” bulunamadı.", 4000)
+                    return
+                if not self.ask_wrap("Belgenin sonuna gelindi. Baştan aransın mı?"):
+                    return
                 c = doc.find(q, 0)
-                if not c.isNull():
-                    self.statusBar().showMessage("Metnin sonuna gelindi; baştan sürdürülüyor.", 3000)
         else:
             c = doc.find(q, self.sentences[self.current_index].start, QTextDocument.FindBackward)
             if c.isNull():
+                if doc.find(q, 0).isNull():
+                    self.statusBar().showMessage(f"“{q}” bulunamadı.", 4000)
+                    return
+                if not self.ask_wrap("Belgenin başına gelindi. Sondan aransın mı?"):
+                    return
                 c = doc.find(q, doc.characterCount() - 1, QTextDocument.FindBackward)
-                if not c.isNull():
-                    self.statusBar().showMessage("Metnin başına gelindi; sondan sürdürülüyor.", 3000)
         if c.isNull():
             self.statusBar().showMessage(f"“{q}” bulunamadı.", 4000)
             return
         self.jump_to(self.sentence_at(c.selectionStart()), reveal=True)
         self.show_search_count(q, c.selectionStart())
+
+    def ask_wrap(self, text):
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Question)
+        box.setWindowTitle("Metinde ara")
+        box.setText(text)
+        yes = box.addButton("Evet", QMessageBox.YesRole)
+        box.addButton("Hayır", QMessageBox.NoRole)
+        box.setDefaultButton(yes)
+        box.exec()
+        return box.clickedButton() is yes
 
     def show_search_count(self, q, pos):
         """Kaçıncı sonuçta olunduğunu durum çubuğunda gösterir (ör. 3 / 12)."""
@@ -2650,6 +2784,10 @@ class MainWindow(QMainWindow):
         self.update_sentence(scroll)
         if play or was_active:
             self.play_current()
+
+    def step(self, d):
+        """Önceki / sonraki cümle (←/→, düğmeler): takip kapalı olsa da yeni cümle görünür alanda kalır."""
+        self.jump_to(self.current_index + d, reveal=True)
 
     def restart_sentence(self):
         if not self.sentences or self.editing:
@@ -2692,6 +2830,8 @@ class MainWindow(QMainWindow):
                                "loading": "⏳ Hazırlanıyor… (iptal)", "idle": "▶ Oku"}[st])
         self.overlay.play_btn.setText({"playing": "⏸ Duraklat", "paused": "▶ Devam Et",
                                        "loading": "⏳ Hazırlanıyor", "idle": "▶ Oku"}[st])
+        if getattr(self, "mini", None) is not None:
+            self.mini.set_playing(st)
         self.update_power()
         if st == "playing":
             self.tick.start()
@@ -3069,6 +3209,9 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         self.closing = True
+        if getattr(self, "mini", None) is not None:
+            self.mini.save_state(self.settings)
+            self.mini.hide()
         if self.immersive():
             # Panel tam ekranda gizli; kaydedilen yerleşim normal görünüm olsun.
             self.is_fullscreen = self.focus_mode = self.peek = False

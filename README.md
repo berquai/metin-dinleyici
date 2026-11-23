@@ -85,9 +85,10 @@ metindinleyici/
   maintenance.py           temizlik ve sıfırlama
   audio_export.py          ses dışa aktarma modülü
   backup.py                yedekleme ve geri yükleme
-  widgets.py               katlanabilir bölüm, denetim çubuğu, uyarlanır yerleşim
+  widgets.py               katlanabilir bölüm, denetim çubuğu, uyarlanır yerleşim, sığmayınca kısalan düğmeler
   power.py                 uyku modunu engelleme
   guide.py                 kullanım kılavuzu (F1)
+  minireader.py            salt okuma modu (küçük, her zaman üstte kalabilen pencere)
   selftest.py              paketlenmiş program için öz-sınama
   crashlog.py              hata günlüğü (kara kutu), oturum izi, güvenli mod
   pdflock.py               PDF motoru için ortak kilit (iş parçacığı güvenliği)
@@ -119,6 +120,32 @@ packaging/
    "Hatalı modül adı", çökmenin hangi bileşende olduğunu söyler.
 
 ## Sürüm notları
+
+### 4.7.5
+- **Salt okuma modu** (Görünüm › Salt Okuma Modu, Ctrl+Shift+R; metnin altındaki ▯ düğmesi): ana pencere gizlenir,
+  yerine dikey kredi kartı büyüklüğünde, çerçevesiz, her zaman üstte kalabilen bir pencere açılır. Fare üzerinde
+  değilken yalnızca metin ve okunan cümlenin vurgusu görünür; fare gelince ilerleme çubuğu, yüzde ve sayfa bilgisi,
+  önceki / oku–duraklat / sonraki, “Her zaman üstte” kutusu ve ana görünüme dönüş düğmesi belirir. Kenar ve
+  köşelerden boyutlandırılır, metnin üzerinden sürüklenerek taşınır. Fare üzerindeyken (pencere etkin olmasa da) ya da
+  pencere etkinken Boşluk oku/duraklat. Ctrl+tekerlek yazıyı büyütür; yeri, boyutu ve ayarları hatırlanır.
+- **Ayarlar menüsü:** Ses ve Hız (Ctrl+Shift+S, kipsiz pencere) ile Belge Seçenekleri kontrol panelinden Ayarlar
+  menüsüne taşındı; “Cümle Bitince Otomatik Devam Et”, uyku modu ve inceltme işareti seçenekleri de burada.
+- **Sadeleşen kontrol paneli:** okunan cümlenin ayrıca gösterildiği kutu kaldırıldı (cümle metinde zaten vurgulu).
+  **Okunan metni takip et**, **⌖ Okunan Yere Git** ve **⧉ Cümleyi Kopyala** metnin sağ altına, ilerleme çubuğunun
+  yanına alındı.
+- **Küçük ekranlar:** üst çubuk ve metnin altındaki düğmeler yer daralınca yalnızca simgeyle görünür; böylece kontrol
+  paneli dar ekranda da yanda kalabiliyor. Panel dar pencerede bilerek yana alınırsa tercih korunur, kendiliğinden
+  alta indirilmez.
+- **Üst çubuk:** panel düğmeleri kısa adlar aldı: Kütüphane · Kaynak Göster/Kaynak Gizle · Alıntılar · Kontroller.
+  Belge adı (pencere başlığında zaten var) ve tema listesi (Görünüm › Tema) üst çubuktan kaldırıldı.
+- **Arama:** belgenin sonuna (geriye aramada başına) gelince “Belgenin sonuna gelindi. Baştan aransın mı?” diye
+  sorar (Evet / Hayır).
+- **Gezinme:** ← / → ve Önceki / Sonraki ile gezinirken yeni cümle hep görünür alanda kalır (takip kapalıyken de;
+  uzun cümlelerde sonu da hesaba katılır).
+- **Temalar:** 7'den 19'a çıktı. Yeni açık temalar: Krem, Nane, Lavanta, Gül Kurusu, Kum, Deniz Köpüğü, Açık
+  Kontrast; yeni koyu temalar: Kahve, Arduvaz, Mor Gece, Kehribar, Gece Yeşili. Tema menüsü açık/koyu diye ayrıldı.
+- **Orijinal belge paneli:** yakınlaştırma listesinin yanında tek tıklık **↔ Genişliğe sığdır** ve **↕ Sayfaya
+  sığdır** düğmeleri; yakınlaştırılmış sayfa fareyle tutup sürüklenerek gezilebiliyor.
 
 ### 4.7.4
 - **← / → ile cümle geçişi:** metin alanındayken ok tuşları önceki / sonraki cümleye geçer (Ctrl+← / → de çalışır).

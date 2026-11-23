@@ -37,7 +37,8 @@ a = Analysis(
     pathex=[ROOT],
     datas=datas,
     hiddenimports=["edge_tts", "ebooklib.epub", "bs4", "docx",
-                   "PySide6.QtMultimedia", "metindinleyici.selftest"],
+                   "PySide6.QtMultimedia", "metindinleyici.selftest", "metindinleyici.minireader",
+                   "metindinleyici.guide"],
     excludes=[
         # Kullanılmayan büyük modüller (paketi yüzlerce MB şişirir)
         "tkinter", "matplotlib", "numpy", "pandas", "scipy", "IPython",
