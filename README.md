@@ -121,6 +121,16 @@ packaging/
 
 ## Sürüm notları
 
+### 4.7.7
+- **F kısayolu (Follow):** “Okunan metni takip et” artık tek tuşla, <kbd>F</kbd> ile açılıp kapanır (eski
+  Ctrl+Shift+F de çalışmaya devam eder). Elle kaydırınca takip kapandığında durum çubuğu F'yi hatırlatır.
+- **Kaynak belgede serbest kaydırma:** orijinal belge panelinde sayfalar alt alta dizilir; tekerlek, kaydırma çubuğu
+  ya da sürükleme ile belgenin içinde kesintisiz gezilir. Sayfa sonunda takılma ve “bir sayfa daha kaydır” bekleme
+  kalktı; tekerlek kaydırması yumuşak. Yalnızca görünen sayfalar ve komşuları çizilir, bellek kullanımı sınırlı
+  kalır. Yakınlaştırma değişince bulunduğunuz yer korunur.
+- **Sadeleşen kontrol paneli:** “Git” listesinin altındaki, işlevi olmayan “Sayfa X” satırı kaldırıldı (sayfa
+  bilgisi zaten Git listesinde ve ilerleme çubuğunda).
+
 ### 4.7.6
 - **Üst çubuk yan panelde:** kontrol paneli sağda ya da solda takılıyken Dosya Aç / Metni Düzenle / Belgeyi Kapat,
   panel düğmeleri ve arama kutusu panelin üstüne alt alta yerleşir; metin alanı yukarıda bir satır kazanır. Panel
@@ -241,8 +251,8 @@ packaging/
 ### 4.5
 - **Orijinal belge paneli** (üst çubukta “Orijinal Belge Paneli”, F7): PDF ve EPUB sayfaları metnin yanında.
   - İlk / önceki / sonraki / son sayfa, sayfa numarasına atlama, PageUp/PageDown/Home/End.
-  - Genişliğe ya da sayfaya sığdır, %50–%300; Ctrl+tekerlek ile yakınlaştırma. Sayfa sonunda tekerlekle
-    kaydırmaya devam edince sonraki sayfaya geçer.
+  - Sayfalar alt alta dizilir ve serbestçe kaydırılır. Genişliğe ya da sayfaya sığdır, %50–%300; Ctrl+tekerlek
+    ile yakınlaştırma.
   - ⌖ okunan cümlenin sayfasına gider; “İzle” açıkken okuma ilerledikçe sayfa kendiliğinden değişir.
   - ⋯ menüsü: sayfayı resim olarak kaydet (150/300/600 dpi, PNG/JPEG), panoya kopyala, döndür,
     belgeyi varsayılan uygulamada aç.

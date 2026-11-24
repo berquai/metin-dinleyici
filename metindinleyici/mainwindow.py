@@ -324,7 +324,7 @@ class MainWindow(QMainWindow):
         self.follow_check = QCheckBox("Okunan metni takip et")
         self.follow_check.setChecked(True)
         self.follow_check.setFocusPolicy(Qt.NoFocus)
-        self.follow_check.setToolTip("Açıkken metin, okunan cümleyi görünür tutacak şekilde kayar (Ctrl+Shift+F).\n"
+        self.follow_check.setToolTip("Açıkken metin, okunan cümleyi görünür tutacak şekilde kayar (F).\n"
                                      "Okuma sırasında metni elle kaydırırsanız takip kendiliğinden kapanır;\n"
                                      "kutuyu yeniden işaretlediğinizde okunan yere dönülür.")
         self.follow_check.toggled.connect(self.on_follow_toggled)
@@ -419,10 +419,6 @@ class MainWindow(QMainWindow):
             lambda i: self.jump_to(self.combo_first[i], reveal=True) if 0 <= i < len(self.combo_first) else None)
         form2.addRow("Git", self.section_combo)
         g.addLayout(form2)
-        self.where = QLabel("")
-        self.where.setStyleSheet("font-weight:600")
-        self.where.setWordWrap(True)
-        g.addWidget(self.where)
         # Okunan cümle metinde zaten vurgulu: panelde ayrıca gösterilmez (kopyalama düğmesi metnin altında).
 
         # Ses ve hız ile belge seçenekleri panelde değil, Ayarlar menüsünde (seyrek kullanılır, yer kaplamasın).
@@ -576,7 +572,8 @@ class MainWindow(QMainWindow):
         m.addSeparator()
         act(m, "Okunan Yere Git", self.reveal_current, "Ctrl+J")
         self.follow_act = act(m, "Okunan Metni Takip Et", lambda on: self.follow_check.setChecked(on),
-                              "Ctrl+Shift+F", checkable=True)
+                              "F", checkable=True, tip="F: Follow (eski kısayol Ctrl+Shift+F de çalışır)")
+        self.follow_act.setShortcuts([QKeySequence("F"), QKeySequence("Ctrl+Shift+F")])
         act(m, "Metinde Ara", lambda: (self.search.setFocus(), self.search.selectAll()), "Ctrl+F")
         act(m, "Sonraki Sonuç", self.find_next, "F3")
         act(m, "Önceki Sonuç", self.find_prev, "Shift+F3")
@@ -2633,7 +2630,6 @@ class MainWindow(QMainWindow):
         self.section_combo.clear()
         self.index.blockSignals(True); self.index.setRange(0, 0); self.index.blockSignals(False)
         self.total.setText("/ 0")
-        self.where.setText("")
         self.setWindowTitle(APP_NAME)
         self.close_doc_btn.setEnabled(False)
         self.close_doc_act.setEnabled(False)
@@ -2702,10 +2698,8 @@ class MainWindow(QMainWindow):
         if not self.sentences:
             return
         i = self.current_index
-        s = self.sentences[i]
         self.index.blockSignals(True); self.index.setValue(i + 1); self.index.blockSignals(False)
         self.update_progress()
-        self.where.setText(self.toc[s.section][0] if s.section < len(self.toc) else "")
         self.sync_docview()
         ci = bisect.bisect_right(self.combo_first, i) - 1
         if ci >= 0:
@@ -2771,8 +2765,8 @@ class MainWindow(QMainWindow):
         """Kullanıcı okuma sırasında metni kendisi kaydırırsa takibi bırakır ki geri çekilmesin."""
         if self.follow_check.isChecked() and self.state in ("playing", "loading"):
             self.follow_check.setChecked(False)
-            self.statusBar().showMessage("Takip kapatıldı. Okunan yere dönmek için Ctrl+J ya da "
-                                         "“Okunan metni takip et” kutusu.", 6000)
+            self.statusBar().showMessage("Takip kapatıldı. Yeniden açmak için F, yalnızca okunan yere dönmek "
+                                         "için Ctrl+J.", 6000)
 
     def copy_sentence(self):
         if not self.sentences:

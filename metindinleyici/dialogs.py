@@ -39,9 +39,8 @@ ABOUT_HTML = f"""
 <h2 style="margin-bottom:0">{APP_NAME}</h2>
 <p style="margin-top:2px">Sürüm {APP_VERSION} &nbsp;·&nbsp; {APP_YEAR}</p>
 <p>PDF, EPUB, DOCX ve TXT belgeleri için sesli okuma uygulaması.</p>
-<p><b>Bu sürümde:</b> kontrol paneli yandayken arama kutusu ve belge/panel düğmeleri panelin üstünde,
-Alıntılar ve Notlar kontrol panelinin altında; ilerleme çubuğunda cümle, yüzde ve sayfa bilgisi isteğe göre seçilir;
-salt okuma penceresinde Ctrl+T ile tema değişir.</p>
+<p><b>Bu sürümde:</b> okunan metni takip etmek için <b>F</b> kısayolu (Follow); orijinal belge panelinde
+sayfalar alt alta dizilir ve takılmadan serbestçe kaydırılır; kontrol paneli sadeleşti.</p>
 <p>{APP_NAME}, <b>{AUTHOR}</b> tarafından kişisel bir proje olarak geliştirilmiştir
 ve <b>tamamen ücretsiz</b> olarak dağıtılmaktadır.</p>
 <p><b>Telif Hakkı © {APP_YEAR} {AUTHOR}.</b><br>

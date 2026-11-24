@@ -5,10 +5,10 @@ import html
 import re
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QKeySequence, QShortcut, QTextCharFormat, QTextCursor, QTextDocument
+from PySide6.QtGui import QColor, QKeySequence, QShortcut, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import (
     QDialog, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem, QPushButton, QSplitter, QTextBrowser,
-    QTextEdit, QVBoxLayout, QWidget,
+    QTextEdit, QVBoxLayout,
 )
 
 from . import APP_NAME, APP_VERSION
@@ -66,7 +66,7 @@ olsa da metin gerektiği kadar kayar.</li>
 </ul>
 <h3>Okunan metni takip etmek</h3>
 <p>Metnin sağ altındaki <b>Okunan metni takip et</b> kutusu açıkken metin, okunan cümle görünür kalacak şekilde
-kayar (<kbd>Ctrl+Shift+F</kbd>). Okuma sırasında metni elle kaydırırsanız takip kendiliğinden kapanır; böylece önceki
+kayar (<kbd>F</kbd>, “Follow”; eski <kbd>Ctrl+Shift+F</kbd> de çalışır). Okuma sırasında metni elle kaydırırsanız takip kendiliğinden kapanır; böylece önceki
 bir yere bakarken uygulama sizi geri çekmez. Okunan yere dönmek için yanındaki <b>⌖ Okunan Yere Git</b> ya da
 <kbd>Ctrl+J</kbd>. <b>⧉ Cümleyi Kopyala</b> (<kbd>C</kbd>) okunan cümleyi panoya alır.</p>
 <h3>Ses ve hız (Ayarlar › Ses ve Hız, Ctrl+Shift+S)</h3>
@@ -182,12 +182,14 @@ klasörü taratın: belgeler içeriklerine göre eşleştiği için dosya adlar�
 düğme <b>Kaynak Gizle</b> olur; <kbd>F7</kbd>).
 Dinlerken taranmış sayfayı ya da tabloları, resimleri gözle takip etmek için.</p>
 <ul>
-<li><b>⏮ ◀ ▶ ⏭</b>: ilk, önceki, sonraki, son sayfa. Sayfa numarasını yazıp Enter'a basarak da gidilir.
-Panel seçiliyken <kbd>PageUp</kbd>, <kbd>PageDown</kbd>, <kbd>Home</kbd>, <kbd>End</kbd>.</li>
-<li>Sayfanın sonunda tekerlekle aşağı kaydırmaya devam edince sonraki sayfaya geçer.</li>
+<li>Sayfalar alt alta dizilir; tekerlekle, kaydırma çubuğuyla ya da fareyle sürükleyerek belgenin içinde
+<b>serbestçe kaydırılır</b>, sayfa geçişlerinde takılma olmaz. Numara kutusu ekranda en çok yer kaplayan sayfayı
+gösterir.</li>
+<li><b>⏮ ◀ ▶ ⏭</b>: ilk, önceki, sonraki, son sayfanın başına gider. Sayfa numarasını yazıp Enter'a basarak da
+gidilir. Panel seçiliyken <kbd>PageUp</kbd>, <kbd>PageDown</kbd>, <kbd>Home</kbd>, <kbd>End</kbd>.</li>
 <li>Yakınlaştırma: <b>Genişliğe sığdır</b>, <b>Sayfaya sığdır</b>, %50–%300, <b>−</b> / <b>+</b>,
 <kbd>Ctrl+tekerlek</kbd>. Listenin sağındaki <b>↔</b> tek tıkla genişliğe, <b>↕</b> sayfaya sığdırır.</li>
-<li>Yakınlaştırılmış sayfanın görünmeyen kısımlarını görmek için sayfayı <b>fareyle tutup sürükleyin</b>
+<li>Sayfanın görünmeyen kısımlarını görmek için sayfayı <b>fareyle tutup sürükleyin</b>
 (imleç el biçimini alır); kaydırma çubuklarına gerek yoktur.</li>
 <li><b>⌖</b>: okunan cümlenin sayfasına gider. <b>İzle</b> açıkken okuma ilerledikçe sayfa kendiliğinden değişir.</li>
 <li><b>⇆ Eşle</b> (sayfa kalibrasyonu): panel okunan metinden farklı bir sayfa gösteriyorsa, okunan metnin bulunduğu
@@ -345,7 +347,7 @@ sözlüğü, ayarlar. Bunları seçerseniz bir kez daha onay istenir.</li>
 <tr><td><kbd>←</kbd> / <kbd>→</kbd> · <kbd>Ctrl+←</kbd> / <kbd>Ctrl+→</kbd></td><td>Önceki / sonraki cümle</td></tr>
 <tr><td><kbd>Ctrl+R</kbd></td><td>Cümleyi baştan oku</td></tr>
 <tr><td><kbd>Ctrl+J</kbd></td><td>Okunan yere git</td></tr>
-<tr><td><kbd>Ctrl+Shift+F</kbd></td><td>Okunan metni takip et (aç/kapat)</td></tr>
+<tr><td><kbd>F</kbd></td><td>Okunan metni takip et (aç/kapat; Follow)</td></tr>
 <tr><td><kbd>Ctrl+F</kbd></td><td>Metinde ara</td></tr>
 <tr><td><kbd>F3</kbd> / <kbd>Shift+F3</kbd></td><td>Sonraki / önceki arama sonucu</td></tr>
 <tr><td><kbd>Ctrl+Shift+F3</kbd></td><td>Baştan ara (ilk geçtiği yer)</td></tr>
@@ -386,7 +388,7 @@ sözlüğü, ayarlar. Bunları seçerseniz bir kez daha onay istenir.</li>
 <tr><td><kbd>PageUp</kbd> / <kbd>PageDown</kbd></td><td>Önceki / sonraki sayfa</td></tr>
 <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>İlk / son sayfa</td></tr>
 <tr><td><kbd>Ctrl+tekerlek</kbd></td><td>Yakınlaştır / uzaklaştır</td></tr>
-<tr><td>Fareyle sürükleme</td><td>Yakınlaştırılmış sayfayı kaydır</td></tr>
+<tr><td>Fareyle sürükleme</td><td>Sayfaları kaydır</td></tr>
 <tr><th align="left" colspan="2">Salt okuma penceresinde</th></tr>
 <tr><td><kbd>Boşluk</kbd></td><td>Oku / Duraklat (fare üzerindeyken ya da pencere etkinken)</td></tr>
 <tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Önceki / sonraki cümle</td></tr>
