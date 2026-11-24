@@ -130,6 +130,9 @@ packaging/
   kalır. Yakınlaştırma değişince bulunduğunuz yer korunur.
 - **Sadeleşen kontrol paneli:** “Git” listesinin altındaki, işlevi olmayan “Sayfa X” satırı kaldırıldı (sayfa
   bilgisi zaten Git listesinde ve ilerleme çubuğunda).
+- Düzeltme: pencere kapatıldıktan sonra, yarıda kalmış bir çevrimiçi ses ya da OCR işi süreci arka planda açık
+  tutabiliyor ve yeni sürümün kurulmasını engelliyordu. Artık kapanışta en çok 3 saniye beklenir, ardından program
+  tamamen kapanır (ayarlar ve kaldığınız yer bundan önce kaydedilir).
 
 ### 4.7.6
 - **Üst çubuk yan panelde:** kontrol paneli sağda ya da solda takılıyken Dosya Aç / Metni Düzenle / Belgeyi Kapat,

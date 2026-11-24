@@ -3376,4 +3376,5 @@ class MainWindow(QMainWindow):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
         self.docview.shutdown()
         self.store.close()
+        self.settings.sync()          # süreç kapanışta zorla sonlandırılırsa da ayarlar diske yazılmış olsun
         super().closeEvent(event)

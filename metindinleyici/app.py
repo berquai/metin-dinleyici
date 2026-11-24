@@ -125,4 +125,29 @@ def main():
         w.load_path(args[0])
     code = app.exec()
     crashlog.mark("closed")
-    sys.exit(code)
+    finish(code)
+
+
+def finish(code, grace=3.0):
+    """Pencere kapandıktan sonra süreç arka planda takılı kalmasın.
+
+    Python, iş havuzlarının (ThreadPoolExecutor) iş parçacıklarını çıkışta shutdown(wait=False) denmiş olsa da
+    bekler. Ağda asılı kalan bir çevrimiçi ses isteği ya da uzun bir OCR işi, pencere kapandığı hâlde süreci
+    açık tutuyor ve yeni sürümün kurulmasını engelliyordu (4.7.6'da görüldü). Her şey closeEvent'te kaydedildiği
+    için kısa bir bekleyişten sonra kalan işler bırakılıp süreç sonlandırılır."""
+    import threading
+    import time
+    deadline = time.monotonic() + grace
+    for t in threading.enumerate():
+        if t is not threading.main_thread() and not t.daemon:
+            t.join(max(0.0, deadline - time.monotonic()))
+    left = [t.name for t in threading.enumerate()
+            if t is not threading.main_thread() and not t.daemon and t.is_alive()]
+    if not left:
+        sys.exit(code)
+    crashlog.write("Kapanışta bitmeyen iş parçacıkları bırakıldı, süreç sonlandırılıyor: " + ", ".join(left))
+    try:
+        sys.stdout.flush(); sys.stderr.flush()
+    except Exception:
+        pass
+    os._exit(code)
